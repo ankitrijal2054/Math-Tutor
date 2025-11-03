@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import MathRenderer from "../shared/MathRenderer";
 
 const MessageBubble = ({ role, content, timestamp }) => {
   const [showTimestamp, setShowTimestamp] = useState(false);
@@ -58,7 +59,9 @@ const MessageBubble = ({ role, content, timestamp }) => {
               : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
           }`}
         >
-          <p className="text-sm leading-relaxed break-words">{content}</p>
+          <div className="text-sm leading-relaxed">
+            <MathRenderer content={content} />
+          </div>
         </div>
 
         {/* Timestamp - Always reserve space, show on hover */}
