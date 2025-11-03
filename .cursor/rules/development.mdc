@@ -1,0 +1,56 @@
+---
+description: Development standards and patterns for AI Math Tutor
+globs: "src/**/*.{jsx,js}"
+---
+
+# AI Math Tutor - Development Standards
+
+## Component Structure
+
+- Use functional components with hooks only (no class components)
+- Keep components small and focused (< 200 lines ideally)
+- Export named components and use descriptive names
+- Place presentational components in `components/`, custom logic in `hooks/`
+
+## State Management Pattern
+
+- AuthContext: Manages user auth state, exports `useAuth()` hook
+- ChatContext: Manages conversation state with useReducer for complex logic, exports `useChatContext()` hook
+- Custom hooks (useFirestore, useAPI, useConversations): Encapsulate logic reusably
+- All custom hooks follow pattern: `{ data, loading, error, ...functions }`
+- Never duplicate API calls; create custom hooks for reuse
+
+## API & Firestore
+
+- All backend calls go through `src/services/api.js` (frontend) or cloud functions (backend)
+- Custom hooks abstract Firestore/API logic
+- Always include error handling with user-friendly messages via react-hot-toast
+- Use try-catch with specific error handling (auth, network, validation)
+
+## Styling
+
+- Tailwind CSS only; no CSS files except global index.css
+- Use Tailwind's responsive prefixes (mobile-first): `sm:`, `md:`, `lg:`
+- Color palette: Indigo-600 to Purple-500 gradient primary, Teal-500 secondary
+- Maintain consistent spacing: multiples of 4 (4, 8, 12, 16, 24, 32px)
+
+## Performance
+
+- Memoize expensive components with React.memo when props don't change frequently
+- Use useCallback for event handlers passed to memoized children
+- Lazy load components with React.lazy + Suspense for routes
+- Avoid inline object/array creation in props; move to const outside component
+
+## Future Features (Placeholders)
+
+- Whiteboard: Placeholder component exists (src/components/whiteboard/Placeholder.jsx)
+- Voice: Can add useVoice hook when ready
+- Problem Generation: Can add useProblemGen hook when ready
+- Keep message types flexible (type: 'text' | 'image' | 'audio' | 'drawing') for easy addition
+
+## Naming Conventions
+
+- Components: PascalCase (e.g., MessageBubble.jsx)
+- Hooks: useCamelCase (e.g., useConversations.js)
+- Services/utils: camelCase (e.g., formatMessage.js)
+- Constants: UPPER_SNAKE_CASE (e.g., API_TIMEOUT)
