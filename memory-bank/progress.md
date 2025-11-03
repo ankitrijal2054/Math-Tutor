@@ -2,51 +2,38 @@
 
 ## Timeline
 
-### Phase 1: Foundation MVP (In Progress)
+### Phase 1: Foundation MVP (70% Complete)
 
 **Estimated Duration:** 20-25 hours  
-**Current Status:** 60% Complete (approximately 15 hours completed)
+**Current Status:** 70% Complete (approximately 17-18 hours completed)
 
-#### Completed (Est. 15 hours)
+#### Completed (Est. 20-21 hours)
 
 - ✅ Task 1.1 - Project Setup (Vite, Tailwind, Firebase, Emulators) - ~7 hours
 - ✅ Task 1.2 - Authentication System - ~6 hours
-
-  - AuthContext and useAuth hook
-  - Email/password signup and login with validation
-  - Google OAuth integration
-  - Firestore user profile creation
-  - Protected routes with automatic redirect
-  - React Router v7 setup with routes
-  - Modern dark theme UI with glassmorphism
-  - Frosted glass cards with backdrop-blur
-  - Animated background effects
-  - Proper form spacing and layout
-
 - ✅ Task 1.3 - Chat UI Components - ~2 hours
-  - MessageBubble component with role-based styling
-  - MessageList with auto-scroll and empty state
-  - InputArea with auto-expanding textarea
-  - TypingIndicator with animated dots
-  - ChatContainer managing local message state
-  - Header with user dropdown
-  - Layout with responsive sidebar
-  - ChatPage integration
-  - Tailwind styling with animations
-  - Mock AI response for testing
+- ✅ Task 1.4 - Socratic Backend / Cloud Functions - DEPLOYED - ~2.5 hours
+- ✅ Task 1.5 - Frontend-Backend Connection - COMPLETE - ~3 hours
 
-#### In Progress (Est. 3-4 hours)
+  - API client with token authentication (src/services/api.js)
+  - Chat state management with Firestore integration (src/contexts/ChatContext.jsx)
+  - ChatContainer connected to real backend
+  - ChatPage with conversation initialization
+  - App.jsx wrapped with ChatProvider
+  - URL-based conversation routing (/chat/:conversationId)
+  - Auto-initialization and conversation CRUD operations
+  - Optimistic updates and error handling
+  - Build successful with no errors
 
-- 🔄 Task 1.4 - Socratic Backend / Cloud Functions (starting)
+#### In Progress
 
-#### Remaining (Est. 8-10 hours)
+- 🔄 Task 1.6 - Math Rendering with KaTeX (starting next)
 
-- ⏳ Task 1.4 - Socratic Backend / Cloud Functions (3-4 hours)
-- ⏳ Task 1.5 - Frontend-Backend Connection (2-3 hours)
+#### Remaining (Est. 2-4 hours)
+
 - ⏳ Task 1.6 - Math Rendering with KaTeX (1-2 hours)
-- ⏳ Task 1.7 - Conversation Persistence (2-3 hours)
-- ⏳ Task 1.8 - Image Upload & Firebase Storage (2-3 hours)
-- ⏳ Task 1.9 - Responsive Design & Polish (2-3 hours)
+- ⏳ Task 1.7 - Conversation Persistence (1-2 hours)
+- ⏳ Task 1.8 - Image Upload & Firebase Storage (1-2 hours)
 
 ### Phase 2: Image Upload & OCR (Pending)
 
@@ -79,110 +66,194 @@
 
 ## Achievements
 
+### Task 1.4 - Socratic Backend Deployed ✅
+
+**Status:** ✅ SUCCESSFULLY DEPLOYED TO PRODUCTION
+
+- Created 3 backend files:
+
+  - `functions/src/utils/prompts.js` - Comprehensive Socratic system prompt (86 lines)
+  - `functions/src/utils/openai.js` - OpenAI client with exponential backoff retries (98 lines)
+  - `functions/src/api/chat.js` - Main chat endpoint Cloud Function (215 lines)
+
+- Features implemented:
+
+  - Firebase ID token verification for security
+  - Firestore conversation context fetching (last 15 messages)
+  - OpenAI GPT-4o-mini integration with Socratic prompting
+  - Exponential backoff retry logic (3 retries with jitter)
+  - Rate limit handling (429, 500, 502, 503 errors)
+  - Message persistence (both user and assistant responses)
+  - Comprehensive error handling (401, 403, 400, 500 status codes)
+  - CORS configured for frontend access
+  - LaTeX formatting support ($...$ for inline, $$...$$ for block)
+
+- Deployment journey:
+
+  - Created system prompt following Socratic method principles
+  - Fixed lazy OpenAI initialization (resolved environment variable loading issue)
+  - Fixed .env file (removed reserved FIREBASE_PROJECT_ID variable)
+  - Successfully upgraded Firebase to Blaze plan
+  - Deployed via Firebase CLI to Google Cloud Run
+  - Function URL: https://chat-4gp5jdis3q-uc.a.run.app
+
+- Cost & Performance:
+  - Model: gpt-4o-mini (most cost-efficient)
+  - ~$0.002 per message (~$1.50 per 1,000 messages)
+  - Max 500 tokens per response
+  - $300/month free credit on Blaze plan
+
 ### Task 1.3 - Chat UI Components Built ✅
 
-- Created 5 chat-specific components:
-  - MessageBubble: Role-based styling with avatar icons and timestamps
-  - MessageList: Auto-scrolling container with empty state
-  - InputArea: Auto-expanding textarea with send button and future feature icons
-  - TypingIndicator: Animated loading state
-  - ChatContainer: Main component managing message state
-- Created 2 layout components:
-  - Header: Logo, user profile dropdown, logout
-  - Layout: Responsive layout with sidebar and main content
-- Added custom Tailwind animations:
-  - fadeIn: 200ms smooth fade-in with upward motion
-  - Bounce animation already built-in to Tailwind
-- Styling features:
-  - Dark theme with slate-900 gradient
-  - Indigo-500 to Purple-600 gradient for tutor messages
-  - White messages with shadows for user
-  - Proper spacing and responsive design
-  - Smooth transitions on all interactions
+- Created 5 chat-specific components
+- Created 2 layout components
+- Added custom Tailwind animations
+- Styling with dark theme and gradients
 
 ### Infrastructure
 
-- ✅ Three terminals running simultaneously (Vite dev, Emulators, Working)
-- ✅ Hot Module Replacement (HMR) working in dev
-- ✅ Tailwind CSS properly configured with animations
-- ✅ Firebase Auth emulator ready
-- ✅ Firestore emulator ready
-- ✅ Cloud Functions emulator ready
-- ✅ Emulator UI accessible at http://localhost:4000
+- ✅ Vite dev server with HMR
+- ✅ Tailwind CSS v4 with custom animations
+- ✅ Firebase Auth with email/password + Google OAuth
+- ✅ Firebase Firestore database
+- ✅ Firebase Cloud Functions deployed
+- ✅ Google Cloud Run deployment
+- ✅ Firebase Blaze plan activated
 
 ## What's Working
 
-- ✅ React development environment (hot reload works)
-- ✅ Tailwind CSS styling with custom animations
-- ✅ Firebase initialization and emulator connection
-- ✅ Authentication system (signup, login, Google OAuth)
+- ✅ React development environment (hot reload)
+- ✅ Tailwind CSS styling with animations
+- ✅ Firebase Auth (signup, login, Google, logout)
 - ✅ Protected routes and session persistence
 - ✅ Chat UI with message display and input
 - ✅ Responsive layout for mobile and desktop
-- ✅ User profile management and logout
-- ✅ Project structure and organization
-- ✅ Git version control
+- ✅ Cloud Function deployed and accessible
+- ✅ OpenAI integration functional
+- ✅ Message persistence to Firestore
+- ✅ Socratic dialogue engine active
+- ✅ Frontend-Backend connection (API client working)
+- ✅ Chat state management with ChatContext
+- ✅ URL-based conversation routing
+- ✅ Conversation initialization and CRUD
 
 ## What's Next
 
-1. **Immediate (Next 3-4 hours):** Complete Task 1.4 - Socratic Backend
+### Immediate (Task 1.6 - Next 1-2 hours)
 
-   - Set up OpenAI client with API key
-   - Create Socratic system prompt
-   - Build Cloud Function for chat endpoint
-   - Firebase ID token verification
-   - Message persistence to Firestore
+**Math Rendering with KaTeX**
 
-2. **Short Term (Next 6-8 hours):** Tasks 1.5-1.6
+1. Install KaTeX CSS in main.jsx
+   - Import: `import 'katex/dist/katex.min.css'`
+2. Create MathRenderer component (src/components/shared/MathRenderer.jsx)
+   - Parse $...$ and $$...$$ patterns
+   - Use react-katex for rendering
+3. Update MessageBubble to use MathRenderer
+   - Replace plain text with math-aware rendering
+4. Test with sample math problems
+   - Verify inline math renders correctly
+   - Verify block math centers properly
+   - Test mixed text and math
 
-   - Connect frontend to backend API
-   - Math rendering with KaTeX
-   - Remove mock response simulation
+### Short Term (Next 2-3 hours)
 
-3. **Medium Term:** Tasks 1.7-1.9
+- **Task 1.7:** Conversation persistence UI (load history, new conversation button)
+- **Task 1.8:** Image upload and OCR
 
-   - Full conversation persistence
-   - Image upload and OCR
-   - Responsive design polish
+### Medium Term (Next 4-6 hours)
 
-4. **Milestones:**
-   - **Today:** Task 1.3 complete ✅ & Task 1.4 in progress
-   - **Soon:** Complete MVP core (auth + chat + persistence)
-   - **Week 2:** Add image upload + OCR + conversation history UI
-   - **Week 3:** Polish, testing, deployment prep
-   - **Week 4+:** Stretch features (whiteboard, voice, problem generation)
+- **Task 1.9:** Responsive design polish and testing
+- UI refinements for mobile
+- End-to-end testing across devices
 
 ## Development Velocity
 
 - **Task 1.1:** ~7 hours
 - **Task 1.2:** ~6 hours
-- **Task 1.3:** ~2 hours (very efficient!)
-- **Current Rate:** Approximately 3-5 hours per task on average
-- **Forecast:** MVP (Phase 1-4) in 2-3 weeks with consistent effort
+- **Task 1.3:** ~2 hours
+- **Task 1.4:** ~2.5 hours
+- **Task 1.5:** ~3 hours
+- **Average Rate:** ~4 hours per task
+- **Forecast:** MVP completion in 2-3 more hours (Tasks 1.6, 1.7, 1.8)
 
 ## Code Quality Status
 
 - ✅ No linting errors
-- ✅ Following project standards (hooks, context, Tailwind)
+- ✅ Following development standards (hooks, context, Tailwind)
 - ✅ Proper folder organization
 - ✅ Git initialized and tracking progress
 - ✅ Components follow React best practices
+- ✅ Backend follows Node.js/Cloud Functions best practices
 - ✅ Responsive design patterns applied
 
 ## Testing Status
 
 - ✅ Dev environment verified working
 - ✅ Emulators verified running
-- ✅ Authentication flow tested manually
+- ✅ Authentication flow tested
 - ✅ Chat UI components rendered and styled
-- ⏳ Backend API integration (pending Task 1.4)
-- ⏳ Math rendering (pending Task 1.6)
-- ⏳ Message persistence (pending Task 1.7)
-- ⏳ Cross-browser testing (pending Phase 4)
+- ✅ Cloud Function deployed and accessible
+- ✅ Backend integration with frontend (Task 1.5 - COMPLETE)
+  - API client tested and working
+  - ChatContext state management verified
+  - Conversation initialization working
+  - URL routing functional
+  - Firestore integration ready
+- ⏳ Math rendering (Task 1.6 - next)
+- ⏳ Message persistence verification (Task 1.7 - pending)
+- ⏳ Image upload and OCR (Task 1.8 - pending)
+
+## Deployment Status
+
+**Backend (LIVE ✅)**
+
+- Cloud Function: https://chat-4gp5jdis3q-uc.a.run.app
+- Firebase Project: ai-math-tutor-b09db (Blaze plan)
+- OpenAI API: Configured and working
+- Database: Firestore ready
+
+**Frontend (Ready for Task 1.5)**
+
+- Environment variable needed: VITE_CHAT_API_URL
+- API client service: To be created
+- Chat context: To be created
+- Components ready to connect
 
 ## Risk Management
 
 - ✅ No blockers identified
 - ✅ All major dependencies available
 - ✅ Development path clear
-- ⚠️ Watch for: Firebase cost overruns (mitigated by emulators during dev)
+- ✅ Firebase costs under control (Blaze plan with free credit)
+- ⚠️ Note: OpenAI API key stored in .env (keep secure)
+
+## Critical Info for Task 1.5
+
+**Deployed Backend URL:**
+
+```
+https://chat-4gp5jdis3q-uc.a.run.app
+```
+
+**Environment Setup Needed:**
+
+```
+VITE_CHAT_API_URL=https://chat-4gp5jdis3q-uc.a.run.app
+```
+
+**API Pattern:**
+
+```javascript
+const response = await fetch(CHAT_API_URL, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    conversationId,
+    message,
+    userId,
+  }),
+});
+```
