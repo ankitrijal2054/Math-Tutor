@@ -13,10 +13,20 @@ const WhiteboardContext = createContext(null);
  */
 export const WhiteboardProvider = ({ children }) => {
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
-  const [selectedTool, setSelectedTool] = useState("pen"); // pen, eraser, line, circle, rectangle
+  // Initialize selectedTool from sessionStorage or default to "pen"
+  const [selectedTool, setSelectedTool] = useState(() => {
+    const saved = sessionStorage.getItem("whiteboardTool");
+    return saved || "pen";
+  });
   const [canvasRef, setCanvasRef] = useState(null);
   const [drawingHistory, setDrawingHistory] = useState([]);
+  const [redoHistory, setRedoHistory] = useState([]); // Stack for redo
   const [captionText, setCaptionText] = useState("");
+
+  // Persist selected tool to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem("whiteboardTool", selectedTool);
+  }, [selectedTool]);
 
   const openWhiteboard = useCallback(() => {
     setIsWhiteboardOpen(true);
@@ -29,8 +39,10 @@ export const WhiteboardProvider = ({ children }) => {
   const clearWhiteboard = useCallback(() => {
     if (canvasRef && canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
       setDrawingHistory([]);
+      setRedoHistory([]);
       setCaptionText("");
     }
   }, [canvasRef]);
@@ -38,19 +50,32 @@ export const WhiteboardProvider = ({ children }) => {
   const undo = useCallback(() => {
     if (drawingHistory.length > 0) {
       const newHistory = [...drawingHistory];
-      newHistory.pop();
-      setDrawingHistory(newHistory);
+      const lastAction = newHistory.pop();
 
-      // Redraw canvas with remaining history
-      if (canvasRef && canvasRef.current) {
-        const ctx = canvasRef.current.getContext("2d");
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        redrawCanvas(ctx, newHistory);
-      }
+      // Add to redo stack
+      setRedoHistory((prev) => [...prev, lastAction]);
+      setDrawingHistory(newHistory);
+      // Canvas will be redrawn by WhiteboardCanvas useEffect watching drawingHistory
     }
   }, [drawingHistory, canvasRef]);
 
+  const redo = useCallback(() => {
+    if (redoHistory.length > 0) {
+      const newRedoHistory = [...redoHistory];
+      const actionToRedo = newRedoHistory.pop();
+
+      // Add back to drawing history
+      const newHistory = [...drawingHistory, actionToRedo];
+      setRedoHistory(newRedoHistory);
+      setDrawingHistory(newHistory);
+      // Canvas will be redrawn by WhiteboardCanvas useEffect watching drawingHistory
+    }
+  }, [drawingHistory, redoHistory, canvasRef]);
+
   const redrawCanvas = (ctx, history) => {
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
     history.forEach((action) => {
       ctx.strokeStyle = action.strokeStyle || "#000000";
       ctx.lineWidth = action.lineWidth || 2;
@@ -59,12 +84,27 @@ export const WhiteboardProvider = ({ children }) => {
         action.globalCompositeOperation || "source-over";
 
       if (action.type === "stroke") {
-        ctx.beginPath();
-        ctx.moveTo(action.startX, action.startY);
-        ctx.lineTo(action.endX, action.endY);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.stroke();
+        // Draw smooth stroke from points array
+        if (action.points && action.points.length > 0) {
+          ctx.beginPath();
+          ctx.moveTo(action.points[0].x, action.points[0].y);
+          for (let i = 1; i < action.points.length; i++) {
+            ctx.lineTo(action.points[i].x, action.points[i].y);
+          }
+          ctx.stroke();
+        }
+      } else if (action.type === "eraser_stroke") {
+        // Redraw eraser strokes using clearRect along the path
+        if (action.points && action.points.length > 0) {
+          for (let i = 0; i < action.points.length; i++) {
+            ctx.clearRect(
+              action.points[i].x - action.eraserSize / 2,
+              action.points[i].y - action.eraserSize / 2,
+              action.eraserSize,
+              action.eraserSize
+            );
+          }
+        }
       } else if (action.type === "line") {
         ctx.beginPath();
         ctx.moveTo(action.startX, action.startY);
@@ -93,26 +133,36 @@ export const WhiteboardProvider = ({ children }) => {
       // Limit history to 50 actions to prevent memory issues
       return newHistory.slice(-50);
     });
+    // Clear redo history when new action is added
+    setRedoHistory([]);
   }, []);
 
-  // Keyboard shortcut for undo (Ctrl+Z or Cmd+Z)
+  // Keyboard shortcuts for undo (Ctrl+Z or Cmd+Z) and redo (Ctrl+Shift+Z or Cmd+Shift+Z)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (isWhiteboardOpen && (e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault();
-        undo();
+      if (isWhiteboardOpen && (e.ctrlKey || e.metaKey)) {
+        if (e.key === "z") {
+          if (e.shiftKey) {
+            e.preventDefault();
+            redo();
+          } else {
+            e.preventDefault();
+            undo();
+          }
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isWhiteboardOpen, undo]);
+  }, [isWhiteboardOpen, undo, redo]);
 
   const value = {
     isWhiteboardOpen,
     selectedTool,
     canvasRef,
     drawingHistory,
+    redoHistory,
     captionText,
     openWhiteboard,
     closeWhiteboard,
@@ -123,6 +173,7 @@ export const WhiteboardProvider = ({ children }) => {
     setCaptionText,
     addToHistory,
     undo,
+    redo,
   };
 
   return (

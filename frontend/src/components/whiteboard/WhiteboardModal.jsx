@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Pen, Eraser, Undo2, Trash2, Send } from "lucide-react";
+import { X, Pen, Eraser, Undo2, Redo2, Trash2, Send } from "lucide-react";
 import WhiteboardCanvas from "./WhiteboardCanvas";
 import { useWhiteboard } from "../../contexts/WhiteboardContext";
 import toast from "react-hot-toast";
@@ -12,10 +12,12 @@ const WhiteboardModal = ({ onSend }) => {
     selectedTool,
     setSelectedTool,
     undo,
+    redo,
     captionText,
     setCaptionText,
     canvasRef,
     drawingHistory,
+    redoHistory,
   } = useWhiteboard();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -105,17 +107,18 @@ const WhiteboardModal = ({ onSend }) => {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 bg-slate-50">
-          <div className="flex gap-2">
+        <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 bg-slate-50 gap-2">
+          <div className="flex gap-1 flex-wrap">
             {toolButtons.map((tool) => {
               const Icon = tool.icon;
+              const isActive = selectedTool === tool.id;
               return (
                 <button
                   key={tool.id}
                   onClick={() => setSelectedTool(tool.id)}
                   className={`p-2 rounded-lg transition-all duration-200 ${
-                    selectedTool === tool.id
-                      ? "bg-indigo-500 text-white shadow-md"
+                    isActive
+                      ? "bg-indigo-500 text-white shadow-md scale-110"
                       : "bg-slate-200 text-slate-700 hover:bg-slate-300"
                   }`}
                   title={tool.label}
@@ -130,14 +133,25 @@ const WhiteboardModal = ({ onSend }) => {
             })}
           </div>
 
-          <button
-            onClick={() => undo()}
-            disabled={drawingHistory.length === 0}
-            className="p-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo2 className="w-4 h-4" />
-          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={() => undo()}
+              disabled={drawingHistory.length === 0}
+              className="p-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => redo()}
+              disabled={redoHistory.length === 0}
+              className="p-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              title="Redo (Ctrl+Shift+Z)"
+            >
+              <Redo2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Caption Input */}
