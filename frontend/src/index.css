@@ -19,4 +19,29 @@
   body {
     @apply font-sans antialiased;
   }
+
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-color: #64748b transparent;
+    scrollbar-width: thin;
+  }
 }

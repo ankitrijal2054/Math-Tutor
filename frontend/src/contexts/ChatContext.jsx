@@ -310,6 +310,22 @@ export const ChatProvider = ({ children }) => {
   }, []);
 
   /**
+   * Switch to a different conversation
+   * Clears current messages and loads new conversation
+   */
+  const switchConversation = useCallback(
+    async (convId) => {
+      // Don't reload if already on this conversation
+      if (convId === conversationId) {
+        return;
+      }
+
+      await loadConversation(convId);
+    },
+    [conversationId, loadConversation]
+  );
+
+  /**
    * Create a new conversation
    */
   const createNewConversation = useCallback(async () => {
@@ -354,6 +370,7 @@ export const ChatProvider = ({ children }) => {
     sendMessage,
     loadConversation,
     createNewConversation,
+    switchConversation,
     setConversationId,
     setMessages,
     // OCR state and handlers

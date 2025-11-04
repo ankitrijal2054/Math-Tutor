@@ -226,17 +226,20 @@ export const loadConversationMetadata = async (conversationId) => {
 
 /**
  * Load all conversations for the current user
+ * @param {string} uid - Optional user ID (defaults to current user)
  * @returns {Promise<Array>} Array of conversation objects
  */
-export const loadUserConversations = async () => {
-  if (!auth.currentUser) {
+export const loadUserConversations = async (uid = null) => {
+  const userId = uid || auth.currentUser?.uid;
+
+  if (!userId) {
     throw new Error("User not authenticated");
   }
 
   const conversationsRef = collection(db, "conversations");
   const q = query(
     conversationsRef,
-    where("userId", "==", auth.currentUser.uid),
+    where("userId", "==", userId),
     orderBy("updatedAt", "desc")
   );
 
