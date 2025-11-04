@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 1: Foundation MVP** - Task 1.6 COMPLETE ✅, Task 1.7 Next (Conversation Persistence)
+**Phase 1: Foundation MVP** - Task 1.7 COMPLETE ✅, Task 1.8 Next (Image Upload)
 
 ## Completed Tasks
 
@@ -12,165 +12,125 @@
 - ✅ **Task 1.4:** Backend - Socratic Dialogue Engine - DEPLOYED TO PRODUCTION ✅
 - ✅ **Task 1.5:** Frontend-Backend Connection - COMPLETE ✅
 - ✅ **Task 1.6:** Math Rendering with KaTeX - COMPLETE ✅
+- ✅ **Task 1.7:** Conversation Persistence - COMPLETE ✅
 
-## Task 1.5 - Frontend-Backend Connection - COMPLETE ✅
+## Task 1.7 - Conversation Persistence - COMPLETE ✅
 
 **Status:** ✅ ALL SUBTASKS COMPLETE
 
 **Files Created:**
 
-1. **src/services/api.js** - API client wrapper
+1. **src/services/firestore.js** - Comprehensive Firestore utility library (200+ lines)
 
-   - `callChatAPI(conversationId, message)` function
-   - Firebase ID token authentication
-   - Error handling with user-friendly messages
-   - Supports test function for debugging
+   - `generateConversationTitle(message)` - Extract title from first message (max 50 chars)
+   - `createConversation(firstMessage)` - Create new conversation with proper metadata
+   - `updateConversation(conversationId, updates)` - Update conversation properties
+   - `saveMessage(conversationId, role, content, type)` - Save individual messages
+   - `loadMessages(conversationId)` - Load all messages from a conversation
+   - `loadConversationMetadata(conversationId)` - Load conversation details
+   - `loadUserConversations()` - Fetch all user's conversations (ordered by latest)
+   - `deleteConversation(conversationId)` - Delete conversation and all messages (batch operation)
 
-2. **src/contexts/ChatContext.jsx** - Chat state management
-   - `sendMessage(userMessage)` - Send message to backend
-   - `loadConversation(convId)` - Load existing conversation from Firestore
-   - `createNewConversation()` - Create new conversation document
-   - Optimistic updates for instant UI feedback
-   - Firestore integration for message persistence
-   - Toast notifications for errors
+2. **src/hooks/useConversations.js** - Custom hook for conversation management (60 lines)
+
+   - `loadConversations()` - Load user's conversation list
+   - `removeConversation(id)` - Delete specific conversation
+   - `getConversation(id)` - Get metadata for single conversation
+   - Toast notifications for user feedback
 
 **Files Updated:**
 
-1. **src/components/chat/ChatContainer.jsx** - Real backend integration
+1. **src/contexts/ChatContext.jsx** - Refactored for better persistence (180 lines)
 
-   - Uses ChatContext instead of local state
-   - Removed mock responses
-   - Added error display alert
-   - Calls real API via sendMessage
+   - Now uses firestore utility functions
+   - Added `conversationMetadata` state tracking title, timestamps, message count
+   - Improved `sendMessage()` to update title on first message
+   - Enhanced `loadConversation()` to fetch both messages and metadata
+   - Better error handling with descriptive messages
+   - Improved `createNewConversation()` with metadata initialization
 
-2. **src/pages/ChatPage.jsx** - Conversation initialization
+2. **functions/src/api/chat.js** - Backend improvements (215 lines)
 
-   - Handles URL params for conversationId
-   - Auto-creates new conversation if no ID
-   - Auto-loads existing conversation if ID present
-   - Navigation support for multiple conversations
-
-3. **src/App.jsx** - Context provider setup
-   - Added ChatProvider wrapper
-   - Added /chat/:conversationId route
-   - Maintains /chat route for new conversations
+   - Title generation from first message (50 char limit with ellipsis)
+   - Proper messageCount initialization (2 for user + assistant)
+   - Correct message count increments for existing conversations
+   - Atomicity improvements with batch metadata updates
+   - Better handling of conversation creation vs. update
 
 **Key Features Implemented:**
 
-- ✅ API client with token authentication
-- ✅ Chat state management (messages, loading, error)
-- ✅ Conversation CRUD operations (create, load)
-- ✅ Optimistic updates for better UX
-- ✅ Firestore message persistence
-- ✅ Error handling with toast notifications
-- ✅ URL-based conversation routing
-- ✅ Auto-initialization of conversations
+- ✅ Conversations create with auto-generated title from first message
+- ✅ Message count tracking (increments by 2 per user-assistant exchange)
+- ✅ Proper timestamp management (createdAt, updatedAt, message timestamps)
+- ✅ All messages load in correct chronological order
+- ✅ Conversation metadata accessible (title, message count, timestamps)
+- ✅ Error handling for network and Firestore permission issues
+- ✅ Batch operations for atomic updates
+- ✅ User-friendly error messages with toast notifications
+- ✅ Firestore integration clean and organized
+- ✅ Custom hook for reusable conversation operations
 - ✅ Build successful with no errors
-
-## Task 1.6 - Math Rendering with KaTeX - COMPLETE ✅
-
-**Status:** ✅ ALL SUBTASKS COMPLETE
-
-**Files Created:**
-
-1. **src/components/shared/MathRenderer.jsx** - Math equation renderer (80 lines)
-   - Parses $...$ (inline) and $$...$$ (block) delimiters
-   - Uses react-katex for rendering
-   - Handles error gracefully with fallback
-   - Segments content into text and math parts
-
-**Files Updated:**
-
-1. **src/main.jsx** - Added KaTeX CSS import
-
-   - `import 'katex/dist/katex.min.css'`
-   - Global KaTeX styles available everywhere
-
-2. **src/components/chat/MessageBubble.jsx** - Integrated MathRenderer
-   - Replaced plain text with MathRenderer component
-   - Maintains styling and layout
-   - Supports both user and assistant messages
-
-**Key Features Implemented:**
-
-- ✅ KaTeX CSS imported globally
-- ✅ MathRenderer component with regex parsing
-- ✅ Inline math support ($x^2$)
-- ✅ Block math support ($$\\frac{a}{b}$$)
-- ✅ Smart segment parsing (handles multi-math messages)
-- ✅ Graceful error handling
-- ✅ Proper styling for math display (centered block equations)
-- ✅ No linting errors
-- ✅ Build successful
 
 **Technical Implementation:**
 
-- Uses `/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g` regex for delimiter detection
-- Block math gets `flex justify-center my-3 p-2 rounded-lg bg-slate-700 bg-opacity-20`
-- Inline math rendered with `<span>` in-line flow
-- Segments parsed sequentially to maintain text order
-- React.Fragment used for clean DOM structure
+- Firestore structure: `conversations/{conversationId}` with `messages` subcollection
+- Message ordering: Firestore queries use `orderBy("timestamp", "asc")`
+- Title generation: Extract up to 50 characters from first message, trim whitespace
+- Error handling: Try-catch blocks with user feedback at UI level
+- Data validation: Auth checks before all Firestore operations
+- Batch operations: Multiple deletes use `writeBatch` for atomicity
 
 ## In Progress
 
-Ready to start Task 1.7 (Conversation Persistence)
+Ready to start Task 1.8 (Image Upload & Firebase Storage)
 
 ## Next Tasks
 
-- **Task 1.7:** Conversation Persistence
-
-  - Save and load conversations from Firestore
-  - Display conversation history
-  - Update conversation metadata
-
 - **Task 1.8:** Image Upload & Firebase Storage
 
-## Critical Configuration for Task 1.5 ✅
+  - Image upload UI component with preview
+  - Firebase Storage integration
+  - Image message type in chat
+  - OCR text extraction (backend - Phase 2)
 
-**Environment Variable Setup:**
+## Files Structure - Updated
 
-In `frontend/.env.local`:
-
-```
-VITE_CHAT_API_URL=https://chat-4gp5jdis3q-uc.a.run.app
-VITE_FIREBASE_API_KEY=AIzaSyDvI2EIHZjvJdvG5MfH0yh5MfZxC5KfLqI
-VITE_FIREBASE_AUTH_DOMAIN=ai-math-tutor-b09db.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=ai-math-tutor-b09db
-VITE_FIREBASE_STORAGE_BUCKET=ai-math-tutor-b09db.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=658537925262
-VITE_FIREBASE_APP_ID=1:658537925262:web:2c9e5c5f8d8a7e9c6b4f3e
-```
-
-## API Specification (Task 1.5 Implementation Complete)
-
-**Endpoint:** `POST https://chat-4gp5jdis3q-uc.a.run.app`
-
-**Request:**
-
-```json
-{
-  "conversationId": "conv_123",
-  "message": "How do I solve 2x + 3 = 7?",
-  "userId": "user_uid"
-}
-```
-
-**Headers:**
+### Frontend (Task 1.7 Complete)
 
 ```
-Authorization: Bearer <Firebase_ID_Token>
-Content-Type: application/json
+frontend/
+├── src/
+│   ├── services/
+│   │   ├── auth.js
+│   │   ├── firebase.js
+│   │   ├── api.js
+│   │   └── firestore.js          (✅ CREATED - Conversation CRUD)
+│   ├── hooks/
+│   │   └── useConversations.js   (✅ CREATED - Conversation management)
+│   ├── contexts/
+│   │   ├── AuthContext.jsx
+│   │   └── ChatContext.jsx       (✅ UPDATED - Better persistence)
+│   ├── components/
+│   │   ├── auth/
+│   │   ├── chat/
+│   │   └── layout/
+│   ├── pages/
+│   └── main.jsx
+└── .env.local
 ```
 
-**Response (Success - 200):**
+### Backend (Task 1.7 Complete)
 
-```json
-{
-  "success": true,
-  "message": "Let's work through this step by step. What do you get if you subtract 3 from both sides?",
-  "messageId": "msg_abc123",
-  "timestamp": "2025-11-03T22:34:56.789Z"
-}
+```
+functions/
+├── src/
+│   ├── api/
+│   │   └── chat.js          (✅ UPDATED - Title generation, message count)
+│   ├── utils/
+│   │   ├── openai.js
+│   │   └── prompts.js
+│   └── index.js
+└── package.json
 ```
 
 ## MVP Completion Criteria - Progress Update
@@ -185,73 +145,11 @@ Content-Type: application/json
 - ✅ Modern UI/UX with dark theme
 - ✅ Chat UI built with all components
 - ✅ Socratic backend implemented and deployed
-- ✅ Frontend-Backend connection (Task 1.5 - COMPLETE)
-- ✅ Math equations render with KaTeX (Task 1.6 - COMPLETE)
-- ⏳ Messages save to Firestore (Task 1.7 - next)
+- ✅ Frontend-Backend connection (Task 1.5)
+- ✅ Math equations render with KaTeX (Task 1.6)
+- ✅ Messages save to Firestore (Task 1.7)
 - ⏳ Images upload to Firebase Storage (Task 1.8)
 
-## Technical Stack Summary
+## Ready for Task 1.8 ✅
 
-**Frontend (Updated for Task 1.5):**
-
-- React 18+ with Vite
-- Tailwind CSS v4
-- React Router v7
-- Context API for state management
-  - AuthContext for user auth
-  - ChatContext for chat state
-- react-hot-toast for notifications
-- lucide-react for icons
-
-**Backend (Deployed & Working):**
-
-- Firebase Cloud Functions (Google Cloud Run)
-- Node.js 22
-- OpenAI GPT-4o-mini
-- Firebase Admin SDK
-- CORS middleware
-
-**Database (Firestore):**
-
-- Collections: `conversations`, `users`
-- Subcollections: `messages` (under conversations)
-
-**Authentication:**
-
-- Firebase Auth (email/password + Google OAuth)
-
-**Hosting:**
-
-- Frontend: Ready for Firebase Hosting
-- Backend: Google Cloud Run (deployed at https://chat-4gp5jdis3q-uc.a.run.app)
-
-## Files Structure - Updated
-
-### Frontend (Ready for Task 1.6)
-
-```
-frontend/
-├── src/
-│   ├── services/
-│   │   ├── auth.js
-│   │   ├── firebase.js
-│   │   └── api.js          (✅ CREATED - API client)
-│   ├── contexts/
-│   │   ├── AuthContext.jsx (User auth)
-│   │   └── ChatContext.jsx (✅ CREATED - Chat state)
-│   ├── components/
-│   │   ├── auth/           (Login, Signup, GoogleSignIn)
-│   │   ├── chat/           (Updated: ChatContainer uses ChatContext)
-│   │   └── layout/         (Header, Layout)
-│   ├── pages/
-│   │   ├── LoginPage
-│   │   ├── SignupPage
-│   │   └── ChatPage        (✅ UPDATED - Conversation init)
-│   ├── App.jsx             (✅ UPDATED - ChatProvider + route)
-│   └── main.jsx
-└── .env.local              (Configuration with API URL)
-```
-
-## Ready for Task 1.6 ✅
-
-All frontend-backend infrastructure complete and tested. Frontend fully connected to deployed API. Next step: implement math rendering with KaTeX.
+Conversation persistence fully implemented and tested. Frontend-backend infrastructure complete. Ready to add image upload capability.

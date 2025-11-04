@@ -172,25 +172,42 @@ const chat = onRequest(async (req, res) => {
           type: "text",
         });
 
-        // Update conversation's lastMessageAt
-        await db.collection("conversations").doc(conversationId).update({
+        // Generate title from first message (if creating new conversation)
+        let conversationTitle = null;
+        if (!conversationExists) {
+          const maxTitleLength = 50;
+          const titleText = message.trim().replace(/\n/g, " ");
+          conversationTitle =
+            titleText.length > maxTitleLength
+              ? titleText.substring(0, maxTitleLength) + "..."
+              : titleText;
+        }
+
+        // Update conversation metadata
+        const updateData = {
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           lastMessage: message,
-        });
+        };
 
-        // If conversation doesn't exist, create it
         if (!conversationExists) {
-          await db.collection("conversations").doc(conversationId).set(
-            {
-              userId,
-              createdAt: admin.firestore.FieldValue.serverTimestamp(),
-              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-              lastMessage: message,
-              messageCount: 1,
-            },
-            { merge: true }
-          );
+          updateData.userId = userId;
+          updateData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+          updateData.title = conversationTitle;
+          updateData.messageCount = 2; // user + assistant
+        } else {
+          // Increment message count for existing conversations
+          const convDoc = await db
+            .collection("conversations")
+            .doc(conversationId)
+            .get();
+          const currentCount = convDoc.data()?.messageCount || 0;
+          updateData.messageCount = currentCount + 2; // user + assistant
         }
+
+        await db
+          .collection("conversations")
+          .doc(conversationId)
+          .set(updateData, { merge: true });
       } catch (error) {
         console.error("Error saving messages:", error);
         res.status(500).json({ error: "Failed to save conversation" });

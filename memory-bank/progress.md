@@ -2,12 +2,12 @@
 
 ## Timeline
 
-### Phase 1: Foundation MVP (75% Complete)
+### Phase 1: Foundation MVP (80% Complete)
 
 **Estimated Duration:** 20-25 hours  
-**Current Status:** 75% Complete (approximately 18-19 hours completed)
+**Current Status:** 80% Complete (approximately 20-21 hours completed)
 
-#### Completed (Est. 20-22 hours)
+#### Completed (Est. 22-24 hours)
 
 - ✅ Task 1.1 - Project Setup (Vite, Tailwind, Firebase, Emulators) - ~7 hours
 - ✅ Task 1.2 - Authentication System - ~6 hours
@@ -36,13 +36,26 @@
   - Graceful error handling
   - Build successful with no errors
 
+- ✅ Task 1.7 - Conversation Persistence - COMPLETE - ~2.5 hours
+
+  - Created firestore.js utility with 8 CRUD functions
+  - Created useConversations() custom hook
+  - Refactored ChatContext for better persistence
+  - Title generation from first message (50 char limit)
+  - Message count tracking (2 per exchange)
+  - Proper timestamp management (createdAt, updatedAt)
+  - All messages load in chronological order
+  - Batch operations for atomic deletes
+  - Comprehensive error handling with user feedback
+  - Backend updated for proper title generation and metadata
+  - Build successful with no errors
+
 #### In Progress
 
-- 🔄 Task 1.7 - Conversation Persistence (starting next)
+- 🔄 Task 1.8 - Image Upload & Firebase Storage (starting next)
 
-#### Remaining (Est. 1-3 hours)
+#### Remaining (Est. 1-2 hours)
 
-- ⏳ Task 1.7 - Conversation Persistence (1-2 hours)
 - ⏳ Task 1.8 - Image Upload & Firebase Storage (1-2 hours)
 
 ### Phase 2: Image Upload & OCR (Pending)
@@ -75,6 +88,36 @@
 **Status:** Not Started
 
 ## Achievements
+
+### Task 1.7 - Conversation Persistence - COMPLETE ✅
+
+**Status:** ✅ SUCCESSFULLY IMPLEMENTED
+
+- Created 1 new utility file:
+
+  - `frontend/src/services/firestore.js` - 8 CRUD functions for conversation management
+
+- Created 1 new hook:
+
+  - `frontend/src/hooks/useConversations.js` - Conversation list management
+
+- Updated 2 core files:
+
+  - `frontend/src/contexts/ChatContext.jsx` - Refactored for better persistence
+  - `functions/src/api/chat.js` - Backend title generation and metadata
+
+- Features implemented:
+
+  - Automatic title generation from first message (trim to 50 chars)
+  - Message count tracking (increments by 2 per exchange)
+  - Proper timestamp management (createdAt, updatedAt, message timestamps)
+  - All messages load in correct chronological order from Firestore
+  - Conversation metadata accessible (title, message count, timestamps, userId)
+  - Error handling for network and Firestore permission issues
+  - Batch operations for atomic updates/deletes
+  - User-friendly error messages with toast notifications
+  - Firestore integration clean and organized
+  - Custom hook for reusable conversation operations
 
 ### Task 1.4 - Socratic Backend Deployed ✅
 
@@ -113,13 +156,6 @@
   - Max 500 tokens per response
   - $300/month free credit on Blaze plan
 
-### Task 1.3 - Chat UI Components Built ✅
-
-- Created 5 chat-specific components
-- Created 2 layout components
-- Added custom Tailwind animations
-- Styling with dark theme and gradients
-
 ### Infrastructure
 
 - ✅ Vite dev server with HMR
@@ -146,34 +182,38 @@
 - ✅ Chat state management with ChatContext
 - ✅ URL-based conversation routing
 - ✅ Conversation initialization and CRUD
+- ✅ Math rendering with KaTeX (inline and block)
+- ✅ Conversation persistence with titles and metadata
+- ✅ Message count tracking and ordering
 
 ## What's Next
 
-### Immediate (Task 1.6 - Next 1-2 hours)
+### Immediate (Task 1.8 - Next 1-2 hours)
 
-**Math Rendering with KaTeX**
+**Image Upload & Firebase Storage**
 
-1. Install KaTeX CSS in main.jsx
-   - Import: `import 'katex/dist/katex.min.css'`
-2. Create MathRenderer component (src/components/shared/MathRenderer.jsx)
-   - Parse $...$ and $$...$$ patterns
-   - Use react-katex for rendering
-3. Update MessageBubble to use MathRenderer
-   - Replace plain text with math-aware rendering
-4. Test with sample math problems
-   - Verify inline math renders correctly
-   - Verify block math centers properly
-   - Test mixed text and math
+1. Create ImageUpload component
+   - File input with accept="image/\*"
+   - File validation (type and size)
+   - Preview display
+2. Integrate Firebase Storage
+   - Upload image file to Firebase
+   - Get download URL
+3. Add image messages to chat
+   - Save image URL with message
+   - Display image in message bubbles
+4. Test with sample images
+   - Verify upload and retrieval
+   - Check message display
 
 ### Short Term (Next 2-3 hours)
 
-- **Task 1.7:** Conversation persistence UI (load history, new conversation button)
-- **Task 1.8:** Image upload and OCR
+- **Task 1.9:** Conversation History / Sidebar UI
+- Polish chat interface for mobile
 
 ### Medium Term (Next 4-6 hours)
 
-- **Task 1.9:** Responsive design polish and testing
-- UI refinements for mobile
+- **Task 1.10:** UI/UX Polish and responsive design
 - End-to-end testing across devices
 
 ## Development Velocity
@@ -184,8 +224,9 @@
 - **Task 1.4:** ~2.5 hours
 - **Task 1.5:** ~3 hours
 - **Task 1.6:** ~1.5 hours
-- **Average Rate:** ~3.75 hours per task
-- **Forecast:** MVP completion in 1-2 more hours (Tasks 1.7, 1.8)
+- **Task 1.7:** ~2.5 hours
+- **Average Rate:** ~3.4 hours per task
+- **Forecast:** MVP completion in 1-2 more hours (Tasks 1.8)
 
 ## Code Quality Status
 
@@ -196,6 +237,7 @@
 - ✅ Components follow React best practices
 - ✅ Backend follows Node.js/Cloud Functions best practices
 - ✅ Responsive design patterns applied
+- ✅ Comprehensive error handling
 
 ## Testing Status
 
@@ -217,8 +259,15 @@
   - Block math ($$...$$) centers and displays correctly
   - Mixed text and math in same message works
   - No rendering errors
-- ⏳ Message persistence verification (Task 1.7 - pending)
-- ⏳ Image upload and OCR (Task 1.8 - pending)
+- ✅ Conversation persistence (Task 1.7 - COMPLETE)
+  - Firestore utility functions working
+  - ChatContext refactored and tested
+  - Title generation from first message verified
+  - Message count tracking functional
+  - Timestamps properly managed
+  - Messages load in correct order
+  - Error handling and user feedback working
+- ⏳ Image upload and Firebase Storage (Task 1.8 - pending)
 
 ## Deployment Status
 
@@ -229,12 +278,11 @@
 - OpenAI API: Configured and working
 - Database: Firestore ready
 
-**Frontend (Ready for Task 1.5)**
+**Frontend (Ready for Task 1.8)**
 
-- Environment variable needed: VITE_CHAT_API_URL
-- API client service: To be created
-- Chat context: To be created
-- Components ready to connect
+- Conversation persistence: ✅ Complete
+- All components ready for image upload
+- Firebase Storage emulator ready
 
 ## Risk Management
 
@@ -243,34 +291,3 @@
 - ✅ Development path clear
 - ✅ Firebase costs under control (Blaze plan with free credit)
 - ⚠️ Note: OpenAI API key stored in .env (keep secure)
-
-## Critical Info for Task 1.5
-
-**Deployed Backend URL:**
-
-```
-https://chat-4gp5jdis3q-uc.a.run.app
-```
-
-**Environment Setup Needed:**
-
-```
-VITE_CHAT_API_URL=https://chat-4gp5jdis3q-uc.a.run.app
-```
-
-**API Pattern:**
-
-```javascript
-const response = await fetch(CHAT_API_URL, {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    conversationId,
-    message,
-    userId,
-  }),
-});
-```

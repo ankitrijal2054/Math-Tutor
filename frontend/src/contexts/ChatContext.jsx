@@ -1,20 +1,12 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
-import { db, auth } from "../services/firebase";
+import { createContext, useContext, useState, useCallback } from "react";
+import { auth } from "../services/firebase";
 import { callChatAPI } from "../services/api";
+import {
+  createConversation,
+  loadMessages,
+  loadConversationMetadata,
+  updateConversation,
+} from "../services/firestore";
 import toast from "react-hot-toast";
 
 const ChatContext = createContext(null);
@@ -27,6 +19,7 @@ export const ChatProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [conversationId, setConversationId] = useState(null);
+  const [conversationMetadata, setConversationMetadata] = useState(null);
 
   /**
    * Send a message and get AI response
@@ -69,28 +62,15 @@ export const ChatProvider = ({ children }) => {
 
         setMessages((prev) => [...prev, aiMessageObj]);
 
-        // Save messages to Firestore
-        const conversationRef = collection(
-          db,
-          "conversations",
-          conversationId,
-          "messages"
-        );
-
-        // Save user message
-        await addDoc(conversationRef, {
-          role: "user",
-          content: userMessage,
-          timestamp: serverTimestamp(),
-          userId: auth.currentUser?.uid,
-        });
-
-        // Save AI message
-        await addDoc(conversationRef, {
-          role: "assistant",
-          content: response.message,
-          timestamp: serverTimestamp(),
-        });
+        // Update conversation title if first message
+        if (messages.length === 0) {
+          const title = userMessage.trim().substring(0, 50);
+          await updateConversation(conversationId, { title });
+          setConversationMetadata((prev) => ({
+            ...prev,
+            title,
+          }));
+        }
 
         setIsLoading(false);
       } catch (err) {
@@ -107,11 +87,11 @@ export const ChatProvider = ({ children }) => {
         );
       }
     },
-    [conversationId]
+    [conversationId, messages.length]
   );
 
   /**
-   * Load conversation messages from Firestore
+   * Load conversation messages and metadata from Firestore
    */
   const loadConversation = useCallback(async (convId) => {
     try {
@@ -119,19 +99,14 @@ export const ChatProvider = ({ children }) => {
       setIsLoading(true);
       setConversationId(convId);
 
-      const messagesRef = collection(db, "conversations", convId, "messages");
-      const q = query(messagesRef, orderBy("timestamp", "asc"));
-      const snapshot = await getDocs(q);
-
-      const loadedMessages = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp:
-          doc.data().timestamp?.toDate?.()?.toISOString?.() ||
-          new Date().toISOString(),
-      }));
-
+      // Load messages
+      const loadedMessages = await loadMessages(convId);
       setMessages(loadedMessages);
+
+      // Load conversation metadata
+      const metadata = await loadConversationMetadata(convId);
+      setConversationMetadata(metadata);
+
       setIsLoading(false);
     } catch (err) {
       console.error("Load conversation error:", err);
@@ -149,17 +124,26 @@ export const ChatProvider = ({ children }) => {
       setError(null);
       setMessages([]);
 
-      // Create a new conversation document in Firestore
-      const conversationsRef = collection(db, "conversations");
-      const newConvDoc = await addDoc(conversationsRef, {
-        userId: auth.currentUser?.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      // Create a new conversation document in Firestore with default title
+      if (!auth.currentUser) {
+        throw new Error("User not authenticated");
+      }
+
+      const newConvId = await createConversation("New Conversation");
+      setConversationId(newConvId);
+
+      // Initialize metadata
+      setConversationMetadata({
+        id: newConvId,
+        userId: auth.currentUser.uid,
         title: "New Conversation",
+        messageCount: 0,
+        lastMessage: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       });
 
-      setConversationId(newConvDoc.id);
-      return newConvDoc.id;
+      return newConvId;
     } catch (err) {
       console.error("Create conversation error:", err);
       setError(err.message);
@@ -173,6 +157,7 @@ export const ChatProvider = ({ children }) => {
     isLoading,
     error,
     conversationId,
+    conversationMetadata,
     sendMessage,
     loadConversation,
     createNewConversation,
