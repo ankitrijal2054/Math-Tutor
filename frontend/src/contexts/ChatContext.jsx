@@ -47,8 +47,26 @@ export const ChatProvider = ({ children }) => {
           originalImage: imageDataURL,
         }));
 
-        // Call OCR API
-        const result = await callOCRAPI(imageDataURL, conversationId);
+        // Create conversation if it doesn't exist yet (lazy creation)
+        let convId = conversationId;
+        if (!convId) {
+          convId = await createConversation("Image upload");
+          setConversationId(convId);
+
+          // Initialize metadata for new conversation
+          setConversationMetadata({
+            id: convId,
+            userId: auth.currentUser.uid,
+            title: "Image upload",
+            messageCount: 0,
+            lastMessage: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        // Call OCR API with conversation ID
+        const result = await callOCRAPI(imageDataURL, convId);
 
         setOCRState((prev) => ({
           ...prev,
@@ -93,25 +111,37 @@ export const ChatProvider = ({ children }) => {
    */
   const sendConfirmedOCRText = useCallback(
     async (confirmedText, imageDataURL) => {
-      if (!conversationId) {
-        setError("No active conversation");
-        clearOCRState();
-        return;
-      }
-
       try {
         setError(null);
         setIsLoading(true);
 
+        // Create conversation if it doesn't exist yet (lazy creation)
+        let convId = conversationId;
+        if (!convId) {
+          convId = await createConversation(confirmedText);
+          setConversationId(convId);
+
+          // Initialize metadata for new conversation
+          setConversationMetadata({
+            id: convId,
+            userId: auth.currentUser.uid,
+            title: confirmedText.trim().substring(0, 50),
+            messageCount: 0,
+            lastMessage: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
         // Upload image to Firebase Storage to get a URL (not base64)
         const imageStorageURL = await uploadImageToStorage(
           imageDataURL,
-          conversationId
+          convId
         );
 
         // Save image message to Firestore and get the message ID
         const messageId = await saveMessage(
-          conversationId,
+          convId,
           "user",
           imageStorageURL,
           "image",
@@ -135,7 +165,7 @@ export const ChatProvider = ({ children }) => {
         setMessages((prev) => [...prev, userMessageObj]);
 
         // Send extracted text to chat API
-        const response = await callChatAPI(conversationId, confirmedText);
+        const response = await callChatAPI(convId, confirmedText);
 
         if (!response.success) {
           throw new Error(response.error || "Failed to get response");
@@ -155,7 +185,7 @@ export const ChatProvider = ({ children }) => {
         // Update conversation title if first message
         if (messages.length === 0) {
           const title = confirmedText.trim().substring(0, 50);
-          await updateConversation(conversationId, { title });
+          await updateConversation(convId, { title });
           setConversationMetadata((prev) => ({
             ...prev,
             title,
@@ -181,46 +211,74 @@ export const ChatProvider = ({ children }) => {
    */
   const sendMessage = useCallback(
     async (userMessageData) => {
-      if (!conversationId) {
-        setError("No active conversation");
-        return;
-      }
-
-      // Handle both old string format and new object format
-      let messageType = "text";
-      let messageContent = "";
-      let messageCaption = "";
-
-      if (typeof userMessageData === "string") {
-        // Legacy string format
-        messageContent = userMessageData;
-      } else if (typeof userMessageData === "object") {
-        messageType = userMessageData.type || "text";
-        messageContent = userMessageData.content || "";
-        messageCaption = userMessageData.caption || "";
-      }
-
-      if (!messageContent.trim()) {
-        setError("Message cannot be empty");
-        return;
-      }
-
-      // If this is an image, trigger OCR flow instead of direct send
-      if (messageType === "image") {
-        await processImageWithOCR(messageContent);
-        return;
-      }
-
       try {
         setError(null);
 
-        // Optimistic update - add user message immediately
+        // Handle both old string format and new object format
+        let messageType = "text";
+        let messageContent = "";
+        let messageCaption = "";
+
+        if (typeof userMessageData === "string") {
+          // Legacy string format
+          messageContent = userMessageData;
+        } else if (typeof userMessageData === "object") {
+          messageType = userMessageData.type || "text";
+          messageContent = userMessageData.content || "";
+          messageCaption = userMessageData.caption || "";
+        }
+
+        if (!messageContent.trim()) {
+          setError("Message cannot be empty");
+          return;
+        }
+
+        // If this is an image, trigger OCR flow instead of direct send
+        if (messageType === "image") {
+          await processImageWithOCR(messageContent);
+          return;
+        }
+
+        // Create conversation if it doesn't exist yet (lazy creation)
+        let convId = conversationId;
+        if (!convId) {
+          convId = await createConversation(messageContent);
+          setConversationId(convId);
+
+          // Initialize metadata for new conversation
+          setConversationMetadata({
+            id: convId,
+            userId: auth.currentUser.uid,
+            title: messageContent.trim().substring(0, 50),
+            messageCount: 0,
+            lastMessage: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+
+        // Build additional data - only include caption if it has a value
+        const additionalData = {};
+        if (messageCaption) {
+          additionalData.caption = messageCaption;
+        }
+
+        // Save user message to Firestore FIRST (before API call)
+        const userMessageId = await saveMessage(
+          convId,
+          "user",
+          messageContent,
+          messageType,
+          additionalData
+        );
+
+        // Create user message object with REAL Firestore ID
         const userMessageObj = {
-          id: `msg_${Date.now()}`,
+          id: userMessageId,
           role: "user",
           type: messageType,
           content: messageContent,
-          caption: messageCaption || undefined,
+          ...(messageCaption && { caption: messageCaption }),
           timestamp: new Date().toISOString(),
         };
 
@@ -236,13 +294,13 @@ export const ChatProvider = ({ children }) => {
             : messageContent;
 
         // Call the backend API
-        const response = await callChatAPI(conversationId, apiMessageContent);
+        const response = await callChatAPI(convId, apiMessageContent);
 
         if (!response.success) {
           throw new Error(response.error || "Failed to get response");
         }
 
-        // Add AI response to messages
+        // Add AI response to messages (backend already saved it)
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
@@ -258,7 +316,7 @@ export const ChatProvider = ({ children }) => {
           const title = (messageCaption || messageContent)
             .trim()
             .substring(0, 50);
-          await updateConversation(conversationId, { title });
+          await updateConversation(convId, { title });
           setConversationMetadata((prev) => ({
             ...prev,
             title,
@@ -274,10 +332,8 @@ export const ChatProvider = ({ children }) => {
         // Show error toast
         toast.error(err.message || "Failed to send message. Please try again.");
 
-        // Remove the optimistic user message on error
-        setMessages((prev) =>
-          prev.filter((msg) => msg.id !== `msg_${Date.now()}`)
-        );
+        // Remove the user message on error (it was already saved but failed to get response)
+        setMessages((prev) => prev.slice(0, -1));
       }
     },
     [conversationId, messages.length, processImageWithOCR]
@@ -308,6 +364,22 @@ export const ChatProvider = ({ children }) => {
       toast.error("Failed to load conversation");
     }
   }, []);
+
+  /**
+   * Switch to a different conversation
+   * Clears current messages and loads new conversation
+   */
+  const switchConversation = useCallback(
+    async (convId) => {
+      // Don't reload if already on this conversation
+      if (convId === conversationId) {
+        return;
+      }
+
+      await loadConversation(convId);
+    },
+    [conversationId, loadConversation]
+  );
 
   /**
    * Create a new conversation
@@ -345,6 +417,17 @@ export const ChatProvider = ({ children }) => {
     }
   }, []);
 
+  /**
+   * Clear chat state when no active conversation
+   */
+  const clearChat = useCallback(() => {
+    setMessages([]);
+    setConversationId(null);
+    setConversationMetadata(null);
+    setError(null);
+    clearOCRState();
+  }, [clearOCRState]);
+
   const value = {
     messages,
     isLoading,
@@ -354,8 +437,10 @@ export const ChatProvider = ({ children }) => {
     sendMessage,
     loadConversation,
     createNewConversation,
+    switchConversation,
     setConversationId,
     setMessages,
+    clearChat,
     // OCR state and handlers
     ocrState,
     processImageWithOCR,

@@ -2,210 +2,130 @@
 
 ## Current Phase
 
-**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 COMPLETE ✅, Task 2.4 COMPLETE ✅
+**Phase 5: Stretch Features - Interactive Whiteboard** - Starting Task 5.1
+**Phase 4 (UI/UX Polish & Testing)** - DEFERRED TO LATER (will revisit after Phase 5 features complete)
 
 ## Completed Tasks
 
-- ✅ **Task 1.1:** Project Initialization & Setup
-- ✅ **Task 1.2:** Authentication System
-- ✅ **Task 1.3:** Basic Chat Interface (Frontend UI)
-- ✅ **Task 1.4:** Backend - Socratic Dialogue Engine - DEPLOYED TO PRODUCTION ✅
-- ✅ **Task 1.5:** Frontend-Backend Connection - COMPLETE ✅
-- ✅ **Task 1.6:** Math Rendering with KaTeX - COMPLETE ✅
-- ✅ **Task 1.7:** Conversation Persistence - COMPLETE ✅
-- ✅ **Task 2.1:** Image Upload UI - COMPLETE ✅
-- ✅ **Task 2.2:** OCR Backend Processing - COMPLETE ✅
-- ✅ **Task 2.3:** OCR Integration & Confirmation Flow - COMPLETE ✅
-- ✅ **Task 2.4:** Image Message Display - COMPLETE ✅
+- ✅ **Task 1.1-1.7:** Foundation MVP Phase (7/7 complete)
+- ✅ **Task 2.1-2.4:** Image Upload & OCR Phase (4/4 complete)
+- ✅ **Task 3.1-3.3:** Conversation History UI Phase (3/3 complete)
+- ⏳ **Phase 4:** UI/UX Polish & Testing (DEFERRED - will do after Phase 5)
+- 🔄 **Phase 5:** Starting - Interactive Whiteboard (Task 5.1 NEXT)
 
-## Task 2.4 - Image Message Display - COMPLETE ✅
+## Whiteboard Design Specification (Approved)
 
-**Status:** ✅ ALL SUBTASKS COMPLETE - TESTED AND WORKING
+**Architecture:** Modal-based design (NOT side-panel like originally planned)
 
-### UI/UX Improvements Made
+### Visual Design
 
-**1. Removed Optional Caption Textbox**
+- **Position:** Slides up from bottom of screen
+- **Height:** 40% of viewport height (40vh)
+- **Animation:** Smooth slide-up transition
+- **Background:** White/light gray canvas with rounded top corners
+- **Z-index:** Above chat, below other modals
 
-- Simplified input flow - no separate caption textarea
-- Caption now goes directly in the main text input field
-- Placeholder updates: "Add caption or ask a question..." when image selected
+### UI Components
 
-**2. Simplified Image Preview UI**
+1. **Header (Top)**
 
-- Removed redundant preview from ImageUpload component
-- Single clean preview in InputArea with delete button
-- Reduced visual clutter and confusion
+   - X button (close icon only, left side)
+   - No label, icon-only for modern aesthetic
+   - Closes modal WITHOUT clearing (state persists)
 
-**3. Image Modal Implementation**
+2. **Canvas (Main Area)**
 
-- Click thumbnail to view full-size image
-- Modal with close button (X) and click-outside to dismiss
-- Shows caption and extracted text below image
-- Graceful error handling for broken images
+   - Full-size drawing surface
+   - Blank white background (no grid/lines)
+   - Supports: Pen, Eraser, Basic Shapes (line, circle, rectangle)
+   - Smooth drawing with touch support
 
-### Firebase Storage Integration
+3. **Toolbar (Below Canvas)**
 
-**Problem Solved:** Images were stored as base64 in Firestore, causing:
+   - Tool buttons: Pen, Eraser, Shapes (line, circle, rectangle)
+   - Active tool highlighted visually
+   - Undo button (with keyboard Ctrl+Z support)
+   - Icon-only buttons for clean look
 
-- Document size limit violations (1MB limit)
-- Image corruption on reload
-- Greyed-out/broken images after page refresh
+4. **Footer (Bottom)**
 
-**Solution Implemented:**
+   - Clear button (🗑️ icon) - LEFT SIDE
+   - Send button (✓ or ✈️ icon) - RIGHT SIDE
+   - Both icon-only, proper spacing between
+   - Clear shows confirmation: "Clear all drawings?"
 
-- Created `uploadImageToStorage()` function to upload to Firebase Storage
-- Store only the download URL in Firestore (much smaller)
-- Images persist perfectly across page reloads
+5. **Optional Caption**
+   - Small text input area (optional)
+   - For adding text annotation to drawing
+   - Sent along with whiteboard image
 
-**Files Modified:**
+### Behavior & State
 
-- `frontend/src/services/firestore.js` - Added Storage upload functions
-- `frontend/src/contexts/ChatContext.jsx` - Updated to use Storage URLs
-- `frontend/src/components/chat/MessageBubble.jsx` - Added image error handling
+- **Persistence:** Drawing state persists until user explicitly clears or sends
+- **Clear Action:** Removes all content, shows confirmation dialog
+- **Send Action:** Converts drawing to image, uploads to Firebase Storage, sends as message, closes modal, clears canvas
+- **Tool Persistence:** Selected tool remembers between open/close cycles
+- **Touch Support:** Smooth drawing on mobile/touch devices
 
-### Infrastructure Setup
+### Mobile Responsiveness
 
-**Firebase Storage Configuration:**
+- Similar UI on mobile as desktop
+- 40vh height adapts to viewport
+- Touch-friendly interaction
+- All buttons remain icon-only
 
-1. ✅ Storage enabled in Firebase Console
-2. ✅ CORS configured for localhost:5173 development
-3. ✅ Security Rules updated to allow authenticated users to upload
+### Drawing Tools
 
-**CORS Configuration:**
+1. **Pen Tool** (default)
 
-```json
-[
-  {
-    "origin": [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:*"
-    ],
-    "method": ["GET", "HEAD", "DELETE", "POST", "PUT"],
-    "responseHeader": ["Content-Type", "x-goog-meta-*", "x-goog-*"],
-    "maxAgeSeconds": 3600
-  }
-]
-```
+   - Freehand drawing
+   - Default color: Black
+   - Smooth stroke rendering
 
-**Storage Security Rules:**
+2. **Eraser Tool**
 
-```javascript
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read: if request.auth != null;
-    }
-    match /images/{userId}/{conversationId}/{fileName} {
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
+   - Removes previous strokes
+   - Can be undone
 
-### Backend Optimizations
+3. **Basic Shapes**
 
-**Fixed Duplicate Message Saving:**
+   - Line: Click start → drag to end
+   - Circle: Click center → drag for radius
+   - Rectangle: Click corner → drag to opposite corner
+   - All shapes respect current stroke properties
 
-- Removed redundant user message save from backend chat function
-- Frontend now saves user messages (especially images) first
-- Backend only saves assistant responses
-- Eliminates duplicate messages in conversations
+4. **Undo Functionality**
+   - Each stroke/shape can be undone
+   - History limit: 50 actions max
+   - Keyboard: Ctrl+Z / Cmd+Z
 
-**Removed Redundant OCR History Collection:**
+### Message Integration
 
-- Deleted unnecessary `ocrHistory` subcollection saves
-- Extracted text now stored directly in message document
-- Cleaner data structure with no redundancy
+- Whiteboard drawing converts to PNG image
+- Image uploaded to Firebase Storage
+- Message type: `'whiteboard'`
+- Optional caption text included
+- Displays as image thumbnail (max 300px) in chat
+- Click to view full-size modal
+- Similar to uploaded image messages
 
-**Files Modified:**
+### Next Steps
 
-- `functions/src/api/chat.js` - Removed user message save
-- `functions/src/api/ocr.js` - Removed ocrHistory collection save
+1. Task 5.1: Modal Interface - Build WhiteboardModal, WhiteboardCanvas, WhiteboardContext
+2. Task 5.2: Drawing Implementation - Implement pen, eraser, shapes, undo
+3. Task 5.3: Image Conversion & Integration - Convert to image, send, persist
 
-### Image Error Handling
+---
 
-**MessageBubble Enhancements:**
+## Next: Task 5.1 - Interactive Whiteboard - Modal Interface
 
-- Added image load error detection with `onError` handler
-- Displays "Image unavailable" placeholder if load fails
-- Shows caption/description in placeholder for context
-- Graceful degradation instead of broken image icons
-- Works for both thumbnail and full-size modal
+**Status:** Ready to begin
+**Subtasks:** 10 total
+**Estimated Duration:** 5-6 hours
 
-### Complete Image Flow (Updated)
+**Key Implementation Files to Create:**
 
-```
-User Uploads Image
-↓
-ImageUpload component → InputArea preview with delete button
-↓
-User types caption/question in main input (no separate textbox)
-↓
-User clicks Send
-↓
-ChatContext.sendConfirmedOCRText()
-↓
-uploadImageToStorage() → Firebase Storage
-↓
-Get Storage URL (not base64!)
-↓
-Save to Firestore with Storage URL
-↓
-Send extracted text to chat API
-↓
-Display image with Storage URL (crisp and clean)
-↓
-Reload page → Image still displays perfectly!
-```
-
-### Features Implemented
-
-✅ **Image Display:**
-
-- Images show as clean thumbnails (max 300px)
-- No more greyed-out or broken images after reload
-- Sharp and perfectly rendered
-
-✅ **Image Modal:**
-
-- Click thumbnail to view full-size
-- Professional modal with proper styling
-- Shows caption and extracted text
-
-✅ **Error Handling:**
-
-- Broken images show placeholder instead of error icon
-- User-friendly "Image unavailable" message
-- Graceful degradation
-
-✅ **Data Storage:**
-
-- Images stored in Firebase Storage
-- Only URLs stored in Firestore (small documents)
-- Images persist across page reloads
-- Scalable solution for many images
-
-✅ **Message Deduplication:**
-
-- No more duplicate messages
-- Frontend saves user messages first
-- Backend only saves responses
-- Clean, consistent message history
-
-### Testing Completed
-
-- ✅ Upload image → displays properly
-- ✅ Reload page → image persists, displays perfectly (no greying)
-- ✅ View full size → modal opens with image and text
-- ✅ Multiple images → all display correctly
-- ✅ Image errors → graceful placeholder shown
-- ✅ Message history → clean, no duplicates
-
-### Next: Task 3.1 - Sidebar Component
-
-- Build conversation list sidebar
-- Group conversations by date
-- Delete conversation functionality
-- Mobile drawer support
+- `src/components/whiteboard/WhiteboardModal.jsx`
+- `src/components/whiteboard/WhiteboardCanvas.jsx`
+- `src/contexts/WhiteboardContext.jsx` (if needed, or extend ChatContext)
+- Add whiteboard button to `src/components/chat/InputArea.jsx`

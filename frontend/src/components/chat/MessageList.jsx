@@ -1,25 +1,72 @@
 import React, { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
+import EmptyChatState from "./EmptyChatState";
+import MessageSkeletons from "./MessageSkeletons";
+import { useChatContext } from "../../contexts/ChatContext";
+import {
+  saveScrollPosition,
+  getScrollPosition,
+  clearScrollPosition,
+} from "../../utils/helpers";
 
 const MessageList = ({ messages = [] }) => {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
+  const { conversationId, sendMessage, isLoading } = useChatContext();
 
-  // Auto-scroll to bottom on new messages
+  // Save scroll position when leaving conversation
+  const handleSaveScroll = () => {
+    if (containerRef.current) {
+      const scrollTop = containerRef.current.scrollTop;
+      saveScrollPosition(conversationId, scrollTop);
+    }
+  };
+
+  // Restore scroll position when loading conversation or when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const timer = setTimeout(() => {
+      if (messages.length > 0 && containerRef.current) {
+        const savedPosition = getScrollPosition(conversationId);
+        if (savedPosition > 0) {
+          containerRef.current.scrollTop = savedPosition;
+        } else {
+          // Default: scroll to bottom for new messages
+          messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        }
+      } else if (messages.length === 0 && containerRef.current) {
+        // Clear scroll and show empty state
+        clearScrollPosition(conversationId);
+        containerRef.current.scrollTop = 0;
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [messages.length, conversationId]);
+
+  // Auto-scroll to bottom on new messages (if user is at bottom)
+  useEffect(() => {
+    if (containerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+      // Only auto-scroll if user is near the bottom
+      if (scrollHeight - (scrollTop + clientHeight) < 100) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   }, [messages]);
 
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="flex gap-3 mb-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-700 animate-pulse"></div>
-      <div className="flex-1 space-y-2">
-        <div className="h-4 bg-slate-700 rounded-full w-3/4 animate-pulse"></div>
-        <div className="h-4 bg-slate-700 rounded-full w-1/2 animate-pulse"></div>
-      </div>
-    </div>
-  );
+  // Save scroll position before unmounting or switching conversations
+  useEffect(() => {
+    return () => {
+      handleSaveScroll();
+    };
+  }, [conversationId]);
+
+  /**
+   * Handle example problem click - send as first message
+   */
+  const handleSendExample = (example) => {
+    sendMessage(example);
+  };
 
   return (
     <div
@@ -27,27 +74,30 @@ const MessageList = ({ messages = [] }) => {
       className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gradient-to-b from-slate-900 to-slate-800 rounded-lg"
     >
       {messages.length === 0 ? (
-        <div className="h-full flex flex-col items-center justify-center text-center">
-          <div className="text-6xl mb-4">🎓</div>
-          <h3 className="text-lg font-semibold text-white mb-2">
-            Welcome to AI Math Tutor
-          </h3>
-          <p className="text-slate-400 max-w-xs">
-            Start by asking a math question, and I'll guide you through the
-            solution step-by-step!
-          </p>
-        </div>
+        <>
+          {isLoading ? (
+            <div className="px-4 py-6">
+              <MessageSkeletons />
+            </div>
+          ) : (
+            <EmptyChatState onSendExample={handleSendExample} />
+          )}
+        </>
       ) : (
         <>
           {messages.map((message, index) => (
-            <MessageBubble
+            <div
               key={index}
-              role={message.role}
-              content={message.content}
-              timestamp={message.timestamp}
-              type={message.type || "text"}
-              caption={message.caption}
-            />
+              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+            >
+              <MessageBubble
+                role={message.role}
+                content={message.content}
+                timestamp={message.timestamp}
+                type={message.type || "text"}
+                caption={message.caption}
+              />
+            </div>
           ))}
           <div ref={messagesEndRef} />
         </>

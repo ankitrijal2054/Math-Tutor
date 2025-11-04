@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Header from "./Header";
+import Sidebar from "../sidebar/Sidebar";
 
 const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,23 +15,11 @@ const Layout = ({ children }) => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar - Hidden on mobile, visible on desktop */}
-        <aside
-          className={`${
-            isSidebarOpen ? "block" : "hidden md:block"
-          } w-64 bg-slate-800 border-r border-slate-700 overflow-y-auto transition-all duration-300`}
-        >
-          <nav className="p-4 space-y-2">
-            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
-              Conversations
-            </div>
-
-            {/* Placeholder for conversation history */}
-            <div className="text-sm text-slate-400 p-4 text-center">
-              Conversations will appear here
-            </div>
-          </nav>
-        </aside>
+        {/* Sidebar with Conversations */}
+        <Sidebar
+          isMobileOpen={isSidebarOpen}
+          onMobileClose={() => setIsSidebarOpen(false)}
+        />
 
         {/* Chat Content */}
         <main className="flex-1 flex flex-col overflow-hidden">{children}</main>

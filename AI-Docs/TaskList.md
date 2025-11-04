@@ -1588,548 +1588,388 @@ Tasks are organized by phase following the logical dependency chain. Each task i
 
 ## Phase 5: Stretch Features
 
-### Task 5.1: Interactive Whiteboard - Panel Structure
+### Task 5.1: Interactive Whiteboard - Modal Interface
 
-**Goal:** Build collapsible side panel for whiteboard
-**Dependencies:** Phase 1-4 complete
-**Estimated Effort:** 4-5 hours
+**Goal:** Build modal whiteboard that slides up from bottom with drawing tools
+**Dependencies:** Phase 1-3 complete
+**Estimated Effort:** 5-6 hours
 
 **Subtasks:**
 
-- [ ] 5.1.1 Create WhiteboardPanel component
-  - Create `src/components/whiteboard/WhiteboardPanel.jsx`
-  - Fixed width: 70% of viewport (when open)
-  - Position: Absolute or fixed (right side)
-  - Hidden by default (translateX(100%))
-  - Z-index above chat but below modals
-- [ ] 5.1.2 Implement panel state management
-  - Add to ChatContext or create WhiteboardContext
+- [ ] 5.1.1 Install whiteboard drawing library
+  - Install: `npm install react-canvas-draw` (or similar)
+  - Alternative: Use native HTML5 Canvas API with custom handlers
+  - Choose library that supports: pen, eraser, undo, clear, touch support
+- [ ] 5.1.2 Create WhiteboardModal component
+  - Create `src/components/whiteboard/WhiteboardModal.jsx`
+  - Position: Fixed, bottom 0, height 40vh (40% of viewport)
+  - Slides up from bottom with Tailwind animation
+  - Z-index: Above chat, below other modals
+  - Background: White/light gray with rounded top corners
+- [ ] 5.1.3 Create Canvas drawing component
+  - Create `src/components/whiteboard/WhiteboardCanvas.jsx`
+  - Full-size canvas (fills modal area except header/footer)
+  - Support: Pen tool, eraser tool, basic shapes (line, circle, rectangle)
+  - Blank white background
+  - Smooth drawing with proper touch support
+- [ ] 5.1.4 Implement whiteboard toolbar (header)
+  - Position: Top of modal
+  - Left: X button (close icon only)
+  - Center: Optional title or empty space
+  - State: Persist when closed (don't clear immediately)
+  - Style: Clean, minimal header bar
+- [ ] 5.1.5 Implement action buttons (footer)
+  - Position: Bottom of modal
+  - Left: Clear button (🗑️ icon only) - warns "Clear all drawings?"
+  - Right: Send button (✓ or ✈️ icon only)
+  - Both icon-only for modern aesthetic
+  - Proper spacing between buttons
+- [ ] 5.1.6 Implement drawing tools
+  - Tool 1: Pen (default) - draws freehand strokes
+  - Tool 2: Eraser - removes strokes
+  - Tool 3-5: Basic shapes - Line, Circle, Rectangle
+  - Toolbar: Horizontal row below canvas (or collapsible menu)
+  - Active tool: Visual indicator (highlight/color)
+- [ ] 5.1.7 Implement undo functionality
+  - Undo button next to tools
+  - Each stroke/shape action can be undone
+  - Disable when no actions to undo
+  - Keyboard shortcut: Ctrl+Z / Cmd+Z
+- [ ] 5.1.8 Create WhiteboardContext
   - State: `isWhiteboardOpen: boolean`
-  - Store in localStorage for persistence
-  - Load saved state on mount
-- [ ] 5.1.3 Create slide-in animation
-  - Use Tailwind transitions or Framer Motion
-  - Slide from right: translateX(100%) → translateX(0)
-  - Duration: 300ms ease-in-out
-  - Chat shrinks to 30% simultaneously
-- [ ] 5.1.4 Build panel header
-  - Title: "🎨 Whiteboard"
-  - Minimize button [−]: Collapses panel
-  - Close button [×]: Same as minimize
-  - Style with border-bottom
-- [ ] 5.1.5 Implement chat layout adjustment
-  - When whiteboard open: Chat width 30%
-  - When closed: Chat width 100% (centered)
-  - Use CSS Grid or Flexbox
-  - Smooth transition on width change
-- [ ] 5.1.6 Create mobile full-screen view
-  - Create `src/components/whiteboard/MobileCanvasView.jsx`
-  - Detect screen size < 768px
-  - Render full-screen canvas instead of panel
-  - Add "← Back to Chat" button in header
-- [ ] 5.1.7 Implement view switching on mobile
-  - State: `mobileView: 'chat' | 'canvas'`
-  - Switch between views with slide animation
-  - Hide chat when canvas active (vice versa)
-  - Persist drawing when switching views
-- [ ] 5.1.8 Add whiteboard toggle button
-  - In chat InputArea, add "🎨 Whiteboard" button
-  - On click: Open whiteboard panel
-  - Disable button when whiteboard already open
-  - Show tooltip on hover
-- [ ] 5.1.9 Persist panel state across refresh
-  - Save `isWhiteboardOpen` to localStorage
-  - Load on app mount
-  - Restore panel to open/closed state
-  - Clear state on logout (optional)
-- [ ] 5.1.10 Test panel behavior
-  - Open panel → Chat shrinks to 30%
-  - Close panel → Chat expands to 100%
-  - Refresh page → State persists
-  - Mobile: Full-screen canvas works
-  - Mobile: Back button returns to chat
-  - Transitions smooth on all devices
+  - State: `canvasRef: ref` - store canvas reference
+  - State: `selectedTool: string` - pen, eraser, line, circle, rectangle
+  - Function: `openWhiteboard()`, `closeWhiteboard()`, `clearWhiteboard()`
+  - Function: `sendWhiteboard()` - convert to image and send
+- [ ] 5.1.9 Add whiteboard button to InputArea
+  - In chat input area, add 🎨 icon button (above text field)
+  - Icon only, no label
+  - On click: Open whiteboard modal
+  - Tooltip on hover: "Open Whiteboard"
+  - Position: Above text input on left or right side
+- [ ] 5.1.10 Test modal behavior and appearance
+  - Click whiteboard button → Modal slides up from bottom
+  - Modal covers ~40% of screen height
+  - Drawing tools render correctly
+  - X button closes (state persists)
+  - Clear button clears canvas with confirmation
+  - Send button appears ready for next steps
+  - Mobile responsive (40vh scales appropriately)
 
 **Acceptance Criteria:**
 
-- ✅ Whiteboard panel slides in from right
-- ✅ Chat adjusts width when panel opens
-- ✅ Panel state persists across refresh
-- ✅ Mobile shows full-screen canvas
-- ✅ Animations smooth (300ms)
-- ✅ Toggle button works correctly
-- ✅ Responsive behavior correct
+- ✅ Whiteboard modal slides up from bottom smoothly
+- ✅ Modal height is 40% of viewport
+- ✅ X button closes without clearing
+- ✅ Clear button removes all content with confirmation
+- ✅ Canvas ready for drawing tools
+- ✅ All buttons are icon-only
+- ✅ Modal state persists until cleared or sent
+- ✅ Responsive on mobile
 
 ---
 
 ### Task 5.2: Canvas Drawing Implementation
 
-**Goal:** Implement drawing functionality with react-canvas-draw
-**Dependencies:** Task 5.1 (Panel Structure)
+**Goal:** Implement pen, eraser, shapes, and undo functionality
+**Dependencies:** Task 5.1 (Modal Interface)
+**Estimated Effort:** 5-6 hours
+
+**Subtasks:**
+
+- [ ] 5.2.1 Implement pen tool
+  - Enable freehand drawing with mouse/touch
+  - Smooth stroke rendering
+  - Default color: Black
+  - Default stroke width: 2px
+  - Store strokes in state for undo
+- [ ] 5.2.2 Implement eraser tool
+  - Toggle from pen to eraser
+  - Erase previous strokes by detecting overlap
+  - Visual feedback: Different cursor appearance
+  - Maintain ability to undo erased content
+- [ ] 5.2.3 Implement basic shapes
+  - Line: Click start point, drag to end
+  - Circle: Click center, drag for radius
+  - Rectangle: Click corner, drag to opposite corner
+  - Preview shapes while dragging (optional)
+  - All shapes use current stroke color/width
+- [ ] 5.2.4 Implement undo/redo
+  - Store action history (each stroke/shape)
+  - Undo button: Remove last action
+  - Redo button (optional): Restore last undone action
+  - Keyboard: Ctrl+Z (undo), Ctrl+Shift+Z (redo)
+  - Max history: 50 actions to prevent memory issues
+- [ ] 5.2.5 Create tool selection UI
+  - Toolbar row with icon buttons
+  - Pen tool (default)
+  - Eraser tool
+  - Line shape
+  - Circle shape
+  - Rectangle shape
+  - Active tool highlighted with different styling
+- [ ] 5.2.6 Implement tool persistence
+  - Remember selected tool when modal closed
+  - Reopen modal → Last used tool selected
+  - Store in state (or sessionStorage)
+- [ ] 5.2.7 Add optional text caption area
+  - Small text input below canvas (or in footer)
+  - Optional: Add caption/description for whiteboard
+  - Placeholder: "Add caption (optional)"
+  - Sent along with drawing image
+- [ ] 5.2.8 Test drawing on desktop
+  - Draw with pen → Smooth strokes appear
+  - Switch to eraser → Erases strokes
+  - Draw shapes → Appear on canvas
+  - Undo → Last action removed
+  - Redo → Action restored (if implemented)
+- [ ] 5.2.9 Test drawing on mobile/touch
+  - Touch drawing → Responds smoothly
+  - Multi-touch: Prevent pinch/zoom while drawing
+  - Eraser on touch → Works smoothly
+  - Shapes on touch → Intuitive creation
+- [ ] 5.2.10 Test edge cases
+  - Draw on blank canvas → Works
+  - Undo multiple times → Goes to blank canvas
+  - Undo then draw new → Previous deleted
+  - Clear then draw → Canvas fresh
+  - Switch tools repeatedly → No glitches
+
+**Acceptance Criteria:**
+
+- ✅ Pen draws smooth freehand strokes
+- ✅ Eraser removes content
+- ✅ Basic shapes draw correctly
+- ✅ Undo works reliably
+- ✅ Tools persist between modal open/close
+- ✅ Touch drawing smooth and responsive
+- ✅ No lag or visual glitches
+- ✅ All tools work on desktop and mobile
+
+---
+
+### Task 5.3: Image Conversion & Chat Integration
+
+**Goal:** Convert whiteboard drawing to image and send as message
+**Dependencies:** Task 5.2 (Drawing Implementation)
 **Estimated Effort:** 4-5 hours
 
 **Subtasks:**
 
-- [ ] 5.2.1 Install react-canvas-draw
-  - Run: `npm install react-canvas-draw`
-  - Import in Canvas component
-- [ ] 5.2.2 Create Canvas component
-  - Create `src/components/whiteboard/Canvas.jsx`
-  - Import CanvasDraw from react-canvas-draw
-  - Set canvas dimensions: 100% width/height of panel
-  - Configure props: brushRadius, brushColor, canvasWidth, canvasHeight
-- [ ] 5.2.3 Implement drawing state
-  - State: `selectedTool: 'pen' | 'eraser'`
-  - State: `brushColor: string` (default: black)
-  - State: `brushSize: number` (default: 2)
-  - Pass to CanvasDraw component
-- [ ] 5.2.4 Create Toolbar component
-  - Create `src/components/whiteboard/Toolbar.jsx`
-  - Layout: Horizontal bar below canvas
-  - Button: Pen tool (default active)
-  - Button: Eraser tool
-  - Color picker: 6 preset colors (black, red, blue, green, purple, orange)
-  - Size slider: Small (1px), Medium (3px), Large (6px)
-- [ ] 5.2.5 Implement tool selection
-  - Click pen → Set brushColor, normal mode
-  - Click eraser → Set brushColor to white (background color)
-  - Active tool highlighted in toolbar
-  - Cursor changes based on tool
-- [ ] 5.2.6 Implement color picker
-  - Show 6 color buttons
-  - Click color → Update brushColor
-  - Active color highlighted with border
-  - Only works when pen tool selected
-- [ ] 5.2.7 Implement brush size selector
-  - Three size options: S, M, L
-  - Click size → Update brushRadius
-  - Active size highlighted
-  - Show visual preview of size (optional)
-- [ ] 5.2.8 Add undo/redo functionality
-  - Undo button: Calls canvas.undo()
-  - Redo button (optional, not in react-canvas-draw by default)
-  - Disable when no actions to undo
-  - Keyboard shortcuts: Ctrl+Z, Ctrl+Y
-- [ ] 5.2.9 Add clear canvas button
-  - Clear button: Calls canvas.clear()
-  - Show confirmation: "Clear all drawings?"
-  - Use Headless UI Dialog for confirmation
-  - Red color to indicate destructive action
-- [ ] 5.2.10 Test drawing functionality
-  - Draw with pen → Lines appear
-  - Switch colors → New color draws
-  - Change size → Size updates
-  - Use eraser → Removes drawings
-  - Undo → Removes last action
-  - Clear → Resets canvas
-  - Test with mouse and touch
+- [ ] 5.3.1 Create canvas-to-image conversion function
+  - Export canvas as PNG image data
+  - Create Blob from canvas data
+  - Store as base64 or Blob (for upload to Firebase Storage)
+- [ ] 5.3.2 Integrate with sendMessage function
+  - Modify ChatContext.sendMessage to accept whiteboard image
+  - Optional caption text from textarea
+  - Convert drawing to image before sending
+  - Save to Firebase Storage (similar to uploaded images)
+- [ ] 5.3.3 Create message structure for whiteboard
+  - Message object with:
+    - `type: 'whiteboard'`
+    - `imageUrl: string` (Firebase Storage URL)
+    - `caption: string` (optional)
+    - `role: 'user'`
+    - `timestamp`
+    - Store extracted text: Use OCR on whiteboard if math-heavy
+- [ ] 5.3.4 Update MessageBubble for whiteboard messages
+  - Display whiteboard image as thumbnail (max 300px)
+  - Show caption below image if provided
+  - Modal to view full-size image
+  - Similar styling to uploaded images
+- [ ] 5.3.5 Implement Send button handler
+  - On click: Convert canvas to image
+  - Upload to Firebase Storage (in `images/{userId}/{conversationId}/` folder)
+  - Get download URL
+  - Create message object with type: 'whiteboard'
+  - Save to Firestore
+  - Show sending state (spinner)
+  - Close modal and clear canvas after success
+- [ ] 5.3.6 Add error handling
+  - Handle canvas export errors
+  - Handle Firebase Storage upload errors
+  - Show user-friendly error messages with toast
+  - Provide retry option
+- [ ] 5.3.7 Create optional OCR for whiteboard
+  - If whiteboard contains text/equations, extract with Vision API
+  - Similar to image OCR flow
+  - Extract recognized text as `extractedText` field
+  - Send extracted text to chat API for Socratic response
+- [ ] 5.3.8 Test sending whiteboard
+  - Draw simple shape → Send → Appears in chat as image
+  - Add caption → Send → Caption shows below image
+  - Multiple drawings → All send correctly
+  - Refresh page → Whiteboard image persists in Firestore
+- [ ] 5.3.9 Test whiteboard with Socratic response
+  - Send whiteboard with math problem (drawing or text)
+  - AI receives extracted text
+  - AI responds with Socratic guidance
+  - Conversation continues normally
+- [ ] 5.3.10 Test on mobile and desktop
+  - Whiteboard send flow works on mobile
+  - Image uploads to Firebase correctly
+  - Image displays in chat on refresh
+  - No sizing or display issues
 
 **Acceptance Criteria:**
 
-- ✅ Freehand drawing works smoothly
-- ✅ Tool selection (pen, eraser) works
-- ✅ Color picker updates brush color
-- ✅ Brush size changes correctly
-- ✅ Undo removes last action
-- ✅ Clear resets entire canvas
-- ✅ Drawing works with touch on mobile
-- ✅ Toolbar is intuitive and responsive
+- ✅ Whiteboard drawing converts to image
+- ✅ Image uploads to Firebase Storage
+- ✅ Message saved to Firestore with correct type
+- ✅ Whiteboard image displays in chat
+- ✅ Optional caption displays correctly
+- ✅ Modal closes and clears after send
+- ✅ Image persists across page refresh
+- ✅ Socratic responses work with whiteboard
+- ✅ Works on desktop and mobile
 
 ---
 
-### Task 5.3: Shape Drawing Tools
+### Task 5.4: Voice Interface (Speech-to-Text & Text-to-Speech)
 
-**Goal:** Add basic geometric shapes to whiteboard
-**Dependencies:** Task 5.2 (Canvas Drawing)
+**Goal:** Add voice input and output capabilities
+**Dependencies:** All Phase 1-3, Task 5.1-5.3 complete
+**Estimated Effort:** 4-5 hours
+
+**Subtasks:**
+
+- [ ] 5.4.1 Implement Speech-to-Text
+  - Use Web Speech API (browser native)
+  - Add microphone icon button to InputArea
+  - On click: Start listening for speech
+  - Transcribe to text
+  - Insert into text input field
+- [ ] 5.4.2 Create voice recording UI
+  - Show recording indicator (animated circle)
+  - Show transcribed text in real-time (if API supports)
+  - Stop button or auto-stop after silence
+  - Permission request for microphone
+- [ ] 5.4.3 Handle voice input errors
+  - Microphone not available: Show error
+  - Network error: Show error
+  - No speech detected: "Please try again"
+  - Invalid browser: Disable feature
+- [ ] 5.4.4 Implement Text-to-Speech
+  - Create utility function for speech output
+  - Use Web Speech API (SpeechSynthesis)
+  - Add volume control
+  - Add playback speed control
+  - Cache synthesized audio (optional)
+- [ ] 5.4.5 Add voice button to AI responses
+  - Speaker icon button on tutor messages
+  - On click: Play audio of message
+  - Highlight message while playing
+  - Stop button during playback
+- [ ] 5.4.6 Implement voice settings
+  - Settings menu: Language, voice type, speed, volume
+  - Store preferences in localStorage
+  - Apply on app load
+- [ ] 5.4.7 Handle browser compatibility
+  - Check for Web Speech API support
+  - Graceful fallback if unsupported
+  - Show feature availability note in UI
+  - Test on multiple browsers
+- [ ] 5.4.8 Test voice-to-text
+  - Record message → Appears in input
+  - Send voice message → Sent to API
+  - Multiple messages → All work correctly
+  - Error handling → Shows appropriate messages
+- [ ] 5.4.9 Test text-to-speech
+  - Click speaker → Message plays aloud
+  - Multiple messages → Each plays correctly
+  - Stop/pause works → Can restart
+  - Speed/volume settings apply
+- [ ] 5.4.10 Test on mobile
+  - Microphone access works on mobile
+  - Speaker output plays on device
+  - Touch UI responsive and intuitive
+  - No console errors
+
+**Acceptance Criteria:**
+
+- ✅ Speech-to-text transcribes user input
+- ✅ Text-to-speech plays AI responses
+- ✅ Voice settings persist
+- ✅ Works on major browsers
+- ✅ Graceful fallback on unsupported browsers
+- ✅ Error handling for permissions/failures
+- ✅ Mobile compatible
+- ✅ Improves accessibility for users
+
+---
+
+### Task 5.5: Problem Generation
+
+**Goal:** Auto-generate practice problems from solved problems
+**Dependencies:** All Phase 1-5 tasks
 **Estimated Effort:** 3-4 hours
 
 **Subtasks:**
 
-- [ ] 5.3.1 Add shapes dropdown to toolbar
-  - Button: "⬜ Shapes ▼"
-  - Opens dropdown menu (Headless UI Menu)
-  - Options: Line, Circle, Rectangle, Triangle
-- [ ] 5.3.2 Implement shape mode state
-  - State: `shapeMode: 'line' | 'circle' | 'rectangle' | 'triangle' | null`
-  - When shape selected, set shapeMode
-  - Show visual indicator of active shape
-- [ ] 5.3.3 Implement line drawing
-  - Click to start point, drag to end point
-  - Preview line while dragging
-  - Release to finalize line
-  - Use HTML5 Canvas API or overlay
-- [ ] 5.3.4 Implement circle drawing
-  - Click for center, drag for radius
-  - Preview circle while dragging
-  - Release to finalize
-  - Draw as stroke (not filled)
-- [ ] 5.3.5 Implement rectangle drawing
-  - Click for corner, drag to opposite corner
-  - Preview rectangle while dragging
-  - Release to finalize
-  - Draw as stroke
-- [ ] 5.3.6 Implement triangle drawing
-  - Click three points to define triangle
-  - Show preview lines as points selected
-  - Auto-close triangle after third point
-  - Option: Equilateral or freeform
-- [ ] 5.3.7 Integrate shapes with canvas
-  - Shapes drawn on separate overlay or merged into canvas
-  - Maintain ability to undo shapes
-  - Shapes respect current color and size
-- [ ] 5.3.8 Add shape fill option (optional)
-  - Toggle: Stroke vs Fill
-  - If fill: Draw filled shape
-  - If stroke: Draw outline only
-- [ ] 5.3.9 Handle shape drawing on touch devices
-  - Touch-friendly shape creation
-  - Prevent scrolling while drawing
-  - Test on mobile browsers
-- [ ] 5.3.10 Test shape tools
-  - Draw each shape type
-  - Verify shapes respect color/size
-  - Test undo with shapes
-  - Test on desktop and mobile
-  - Check shapes export correctly
+- [ ] 5.5.1 Create problem generation prompt
+  - In `functions/src/utils/prompts.js`
+  - Design prompt: "Given this solved problem, generate 2-3 similar practice problems"
+  - Vary difficulty slightly
+  - Include LaTeX formatting
+  - Different numbers but same concept
+- [ ] 5.5.2 Create problem generation Cloud Function
+  - Create `functions/src/api/generateProblems.js`
+  - Accept: `solvedProblem`, `numberOfProblems` (1-3)
+  - Call OpenAI with generation prompt
+  - Return array of generated problems
+  - CORS and authentication like chat function
+- [ ] 5.5.3 Add "Generate Practice" button
+  - In chat, after tutor response
+  - Button: "📚 Generate Similar Problems"
+  - On click: Call generation endpoint
+  - Show 2-3 generated problems as clickable buttons
+- [ ] 5.5.4 Implement problem card UI
+  - Display generated problems in card format
+  - Problem text with LaTeX support
+  - Difficulty indicator (optional)
+  - Click to use as new chat message
+- [ ] 5.5.5 Handle problem generation state
+  - Loading state while generating
+  - Display loading skeleton
+  - Error handling if generation fails
+  - Dismiss/hide generated problems
+- [ ] 5.5.6 Store generated problems (optional)
+  - Save to Firestore for analytics
+  - Track which problems were used
+  - Allow user to save as practice problem
+- [ ] 5.5.7 Test problem generation
+  - Complete a math problem
+  - Click "Generate Problems"
+  - 2-3 new problems appear
+  - Click problem → Sent as new message
+  - AI responds to new problem correctly
+- [ ] 5.5.8 Test on various problem types
+  - Linear equations
+  - Geometry
+  - Word problems
+  - Algebra
+  - Verify generated problems are similar
+- [ ] 5.5.9 Verify LaTeX formatting
+  - Generated problems include proper LaTeX
+  - Render correctly in UI
+  - No formatting errors
+- [ ] 5.5.10 Test edge cases
+  - Very simple problems → Generate similar
+  - Complex problems → Generate reasonable variants
+  - Text-only problems → Generate text problems
+  - Image problems → Generate from OCR text
 
 **Acceptance Criteria:**
 
-- ✅ Can draw lines, circles, rectangles, triangles
-- ✅ Shape preview shows while drawing
-- ✅ Shapes respect color and size settings
-- ✅ Undo works with shapes
-- ✅ Works on touch devices
-- ✅ Shapes integrate with freehand drawing
-
----
-
-### Task 5.4: Share Drawing with Chat
-
-**Goal:** Export canvas as image and send to AI
-**Dependencies:** Task 5.2 (Canvas Drawing)
-**Estimated Effort:** 3-4 hours
-
-**Subtasks:**
-
-- [ ] 5.4.1 Add "Share with Tutor" button
-  - Prominent button below canvas
-  - Style with primary gradient
-  - Icon: 💬 or paper plane
-  - Disable if canvas is empty
-- [ ] 5.4.2 Implement canvas export
-  - Use CanvasDraw's getDataURL() method
-  - Returns base64 PNG string
-  - Alternatively: canvas.toBlob() for File object
-- [ ] 5.4.3 Convert canvas to image message
-  - On "Share" click, export canvas
-  - Create image message object
-  - Type: 'image', content: base64 data
-  - Add to chat messages immediately
-- [ ] 5.4.4 Send to OCR/Vision API
-  - Same flow as regular image upload
-  - Call OCR endpoint with canvas image
-  - Extract any text/equations from drawing
-  - Or: Interpret diagram (e.g., "I see a triangle with labeled sides")
-- [ ] 5.4.5 Handle AI response
-  - AI analyzes drawing via Vision API
-  - Responds with Socratic question about drawing
-  - Example: "I see you've drawn a right triangle. What do you notice about the sides?"
-- [ ] 5.4.6 Display shared image in chat
-  - Image appears in chat as user message
-  - Show thumbnail (max 300px width)
-  - "View full size" opens modal
-  - Drawing stays in whiteboard for reference
-- [ ] 5.4.7 Keep whiteboard open after sharing
-  - Don't auto-close panel
-  - User can continue drawing or modify
-  - Or add option: "Share and Close"
-- [ ] 5.4.8 Add share confirmation (optional)
-  - Show toast: "Drawing shared with tutor!"
-  - Visual feedback that action completed
-- [ ] 5.4.9 Handle empty canvas
-  - Disable "Share" button if nothing drawn
-  - Show tooltip: "Draw something first"
-  - Or show warning modal
-- [ ] 5.4.10 Test share functionality
-  - Draw diagram → Share → Appears in chat
-  - AI responds with relevant question
-  - Image persists in Firestore
-  - Can view full size
-  - Whiteboard remains functional after sharing
-
-**Acceptance Criteria:**
-
-- ✅ "Share with Tutor" button works
-- ✅ Canvas exports as image correctly
-- ✅ Image appears in chat messages
-- ✅ AI analyzes and responds to drawing
-- ✅ Whiteboard stays open after sharing
-- ✅ Empty canvas handled gracefully
-- ✅ Feedback confirms successful share
-
----
-
-### Task 5.5: AI Whiteboard Suggestions
-
-**Goal:** AI suggests opening whiteboard for visual problems
-**Dependencies:** Task 5.4 (Share Drawing)
-**Estimated Effort:** 2-3 hours
-
-**Subtasks:**
-
-- [ ] 5.5.1 Define visual problem keywords
-  - Create array of keywords: "triangle", "circle", "graph", "diagram", "draw", "sketch", "plot", "angle", "coordinate", "shape"
-  - Store in utils or constants file
-- [ ] 5.5.2 Implement keyword detection in backend
-  - In chat endpoint, check user message for keywords
-  - Case-insensitive matching
-  - If match found, include hint in system prompt
-- [ ] 5.5.3 Update system prompt for whiteboard suggestion
-  - Add rule: "If problem involves geometry or visual elements, suggest: 'Would you like to open the whiteboard to draw this out? [Open Whiteboard]'"
-  - AI includes button prompt in response
-- [ ] 5.5.4 Create clickable whiteboard button in message
-  - Parse AI message for "[Open Whiteboard]" text
-  - Replace with actual button component
-  - Style as inline button (primary color)
-- [ ] 5.5.5 Implement button click handler
-  - On click: Open whiteboard panel
-  - Focus on canvas
-  - Show helpful tooltip (optional)
-- [ ] 5.5.6 Test keyword detection
-  - Send message: "Draw a triangle"
-  - Verify AI suggests whiteboard
-  - Click button → Whiteboard opens
-  - Test with various geometry terms
-- [ ] 5.5.7 Handle false positives
-  - Some keywords might not need whiteboard
-  - AI should use judgment (context-aware)
-  - User can ignore suggestion
-- [ ] 5.5.8 Add manual trigger option
-  - User can always open whiteboard manually
-  - Suggestion is just a helper, not required
-- [ ] 5.5.9 Document whiteboard use cases
-  - Geometry problems (triangles, circles, angles)
-  - Graphing (coordinate planes, functions)
-  - Visual proofs
-  - Diagrams and illustrations
-- [ ] 5.5.10 Test with real geometry problems
-  - "Prove these triangles are congruent"
-  - "Graph y = 2x + 1"
-  - "Find the area of this shape"
-  - Verify AI suggests whiteboard appropriately
-
-**Acceptance Criteria:**
-
-- ✅ AI detects visual problem keywords
-- ✅ AI suggests opening whiteboard
-- ✅ Clickable button in AI message
-- ✅ Button opens whiteboard panel
-- ✅ Works with various geometry terms
-- ✅ Manual opening still available
-- ✅ Helpful for appropriate problem types
-
----
-
-### Task 5.6: Voice Interface - Speech-to-Text
-
-**Goal:** Add voice input using Web Speech API
-**Dependencies:** Phase 1-4 complete (independent of whiteboard)
-**Estimated Effort:** 3-4 hours
-
-**Subtasks:**
-
-- [ ] 5.6.1 Check Web Speech API availability
-  - Feature detection: `'webkitSpeechRecognition' in window` or `'SpeechRecognition' in window`
-  - Show/hide voice button based on availability
-  - Display message if not supported
-- [ ] 5.6.2 Create VoiceInput component
-  - Create `src/components/chat/VoiceInput.jsx`
-  - Microphone icon button
-  - Active state: Pulsing red icon
-  - Inactive state: Gray icon
-- [ ] 5.6.3 Initialize Speech Recognition
-  - Create recognition instance
-  - Configure: `continuous: false`, `interimResults: true`, `lang: 'en-US'`
-  - Set up event listeners
-- [ ] 5.6.4 Implement start/stop recording
-  - Click mic → Start recognition
-  - Icon changes to pulsing red
-  - Status text: "Listening..."
-  - Click again → Stop recognition
-- [ ] 5.6.5 Handle recognition results
-  - Event: `onresult`
-  - Extract transcript from event
-  - Update input field with transcribed text
-  - Show interim results (live transcription)
-- [ ] 5.6.6 Handle recognition errors
-  - Event: `onerror`
-  - Handle: no-speech, audio-capture, network errors
-  - Show user-friendly error messages
-  - Auto-stop on error
-- [ ] 5.6.7 Auto-send option (optional)
-  - After transcription complete, auto-send
-  - Or: User reviews and sends manually
-  - Add setting to toggle auto-send
-- [ ] 5.6.8 Add visual feedback
-  - Sound wave animation while listening
-  - Transcript appears in real-time
-  - Confirmation when complete
-- [ ] 5.6.9 Test voice input
-  - Click mic → Speak "Solve 2x plus 5 equals 13"
-  - Verify transcript appears in input
-  - Send message → AI responds
-  - Test with math terminology
-  - Test error handling (no speech, denied permission)
-- [ ] 5.6.10 Handle browser compatibility
-  - Works in Chrome, Edge (Chromium)
-  - Limited/no support in Firefox, Safari
-  - Show "Not supported" message gracefully
-  - Recommend Chrome for voice features
-
-**Acceptance Criteria:**
-
-- ✅ Microphone button toggles recording
-- ✅ Speech transcribed to text correctly
-- ✅ Transcription appears in input field
-- ✅ Math terms recognized reasonably well
-- ✅ Error handling works
-- ✅ Visual feedback during recording
-- ✅ Browser compatibility handled
-- ✅ Falls back gracefully if unsupported
-
----
-
-### Task 5.7: Voice Interface - Text-to-Speech
-
-**Goal:** Add voice output for AI responses
-**Dependencies:** Task 5.6 (Speech-to-Text)
-**Estimated Effort:** 2-3 hours
-
-**Subtasks:**
-
-- [ ] 5.7.1 Check Web Speech Synthesis availability
-  - Feature detection: `'speechSynthesis' in window`
-  - Show/hide speaker icons based on availability
-- [ ] 5.7.2 Add speaker icon to AI messages
-  - Small speaker icon in message bubble header
-  - Hidden by default, visible on hover
-  - Click to play audio
-- [ ] 5.7.3 Implement text-to-speech function
-  - Create utility: `speakText(text)`
-  - Create SpeechSynthesisUtterance with text
-  - Configure: voice, rate, pitch
-  - Call `speechSynthesis.speak(utterance)`
-- [ ] 5.7.4 Add play/pause controls
-  - Icon changes: Speaker → Pause while playing
-  - Click while playing → Pause
-  - Click while paused → Resume
-  - Auto-revert icon when complete
-- [ ] 5.7.5 Select voice
-  - Get available voices: `speechSynthesis.getVoices()`
-  - Prefer female voice for tutor (optional)
-  - Prefer high-quality voices
-  - Store preference in localStorage
-- [ ] 5.7.6 Handle math equations in speech
-  - Plain LaTeX sounds awkward: "dollar x squared dollar"
-  - Pre-process text to remove delimiters
-  - Convert to speakable format: "$x^2$" → "x squared"
-  - Or skip math parts entirely
-- [ ] 5.7.7 Add rate/speed control (optional)
-  - Settings: Slow (0.8), Normal (1.0), Fast (1.2)
-  - Slider or buttons in settings
-  - Store in localStorage
-- [ ] 5.7.8 Handle stop on new message
-  - If speech playing and new message arrives
-  - Auto-stop current speech
-  - Don't auto-play new message (user control)
-- [ ] 5.7.9 Test text-to-speech
-  - Click speaker icon → AI message read aloud
-  - Pause works
-  - Resume works
-  - Math handled reasonably (or skipped)
-  - Voice quality acceptable
-- [ ] 5.7.10 Handle browser support
-  - Works in most modern browsers
-  - Voice quality varies by browser/OS
-  - Document best experience browser
-
-**Acceptance Criteria:**
-
-- ✅ Speaker icon on AI messages
-- ✅ Click icon plays message aloud
-- ✅ Pause/resume controls work
-- ✅ Voice selection functional
-- ✅ Math equations handled reasonably
-- ✅ Auto-stops on new message
-- ✅ Browser support handled
-- ✅ Voice quality acceptable
-
----
-
-### Task 5.8: Problem Generation
-
-**Goal:** Generate similar practice problems after completion
-**Dependencies:** Phase 1-4 complete
-**Estimated Effort:** 3-4 hours
-
-**Subtasks:**
-
-- [ ] 5.8.1 Create problem generation endpoint
-  - Create `functions/src/api/problemGen.js`
-  - Export `generateProblems` Cloud Function
-  - Accept: completedProblem (text)
-  - Return: Array of 2-3 similar problems
-- [ ] 5.8.2 Design problem generation prompt
-  - In prompts.js: PROBLEM_GENERATION_PROMPT
-  - Instruction: "Generate 2-3 similar practice problems based on: [problem]. Keep same difficulty and concept but change numbers/context. Return as JSON array: [{problem: '...', hint: '...'}]"
-- [ ] 5.8.3 Implement OpenAI call for generation
-  - Use GPT-4o-mini
-  - Send completed problem as context
-  - Parse JSON response
-  - Validate structure
-- [ ] 5.8.4 Handle generation errors
-  - Invalid JSON → Retry or return error
-  - No problems generated → Return fallback message
-  - API failure → Graceful error
-- [ ] 5.8.5 Create ProblemGenerator component
-  - Create `src/components/chat/ProblemGenerator.jsx`
-  - Shows after problem completion
-  - Button: "Practice Similar Problems"
-  - Displays generated problems as cards
-- [ ] 5.8.6 Detect problem completion
-  - In chat flow, detect when problem solved
-  - Heuristic: AI says "Correct!" or "Well done!"
-  - Or: User explicitly says "I understand" / "Got it"
-  - Trigger problem generation UI
-- [ ] 5.8.7 Display generated problems
-  - Show 2-3 problem cards
-  - Each card: Problem text, "Start" button
-  - Click "Start" → Creates new conversation with that problem
-- [ ] 5.8.8 Integrate with conversation flow
-  - Generated problem starts fresh conversation
-  - Original conversation remains in history
-  - Navigate to new conversation automatically
-- [ ] 5.8.9 Add loading state
-  - Show "Generating practice problems..." while loading
-  - Skeleton cards
-  - Handle if generation takes time (10+ seconds)
-- [ ] 5.8.10 Test problem generation
-  - Complete problem: "Solve 2x + 5 = 13"
-  - Generate problems → Similar algebra equations
-  - Click problem → New conversation starts
-  - Verify problems are truly similar
-  - Test with different problem types
-
-**Acceptance Criteria:**
-
-- ✅ Problem generation endpoint works
-- ✅ Generates 2-3 relevant similar problems
-- ✅ "Practice Similar" button appears after completion
-- ✅ Generated problems display as cards
-- ✅ Clicking problem starts new conversation
-- ✅ Loading states functional
+- ✅ Cloud Function generates valid problems
+- ✅ Generated problems semantically similar
+- ✅ UI displays problems clearly
+- ✅ Clicking problem sends it as message
+- ✅ Works with all problem types
+- ✅ LaTeX renders correctly
 - ✅ Error handling graceful
-- ✅ Works across problem types
+- ✅ Helps with practice and learning
 
 ---
 
