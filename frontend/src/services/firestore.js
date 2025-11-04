@@ -11,6 +11,7 @@ import {
   where,
   serverTimestamp,
   writeBatch,
+  setDoc,
 } from "firebase/firestore";
 import {
   ref,
@@ -125,16 +126,21 @@ export const saveMessage = async (
       ...additionalData, // Include caption, extractedText, etc
     });
 
-    // Update conversation metadata
+    // Update conversation metadata using setDoc with merge
+    // This will create the document if it doesn't exist (for newly created conversations)
     const conversationRef = doc(db, "conversations", conversationId);
     const conversationSnap = await getDoc(conversationRef);
     const currentCount = conversationSnap.data()?.messageCount || 0;
 
-    await updateDoc(conversationRef, {
-      messageCount: currentCount + 1,
-      updatedAt: serverTimestamp(),
-      lastMessage: additionalData.caption || content,
-    });
+    await setDoc(
+      conversationRef,
+      {
+        messageCount: currentCount + 1,
+        updatedAt: serverTimestamp(),
+        lastMessage: additionalData.caption || content,
+      },
+      { merge: true }
+    );
 
     return messageDoc.id;
   } catch (error) {

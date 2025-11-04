@@ -7,30 +7,24 @@ import { useChatContext } from "../contexts/ChatContext";
 const ChatPage = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
-  const { loadConversation, createNewConversation, isLoading } =
-    useChatContext();
+  const { loadConversation, conversationId: contextConvId } = useChatContext();
 
   useEffect(() => {
     const initializeConversation = async () => {
       try {
         if (conversationId) {
-          // Load existing conversation
+          // Load existing conversation from URL
           await loadConversation(conversationId);
-        } else {
-          // Create a new conversation
-          const newConvId = await createNewConversation();
-          if (newConvId) {
-            // Navigate to the new conversation URL
-            navigate(`/chat/${newConvId}`, { replace: true });
-          }
         }
+        // If no conversationId: don't create one yet
+        // Let user send a message first, which will create the conversation
       } catch (error) {
-        console.error("Failed to initialize conversation:", error);
+        console.error("Failed to load conversation:", error);
       }
     };
 
     initializeConversation();
-  }, [conversationId, loadConversation, createNewConversation, navigate]);
+  }, [conversationId, loadConversation]);
 
   return (
     <Layout>
