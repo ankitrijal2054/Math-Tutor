@@ -1,18 +1,12 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   connectAuthEmulator,
   setPersistence,
-  browserLocalPersistence
-} from 'firebase/auth';
-import {
-  getFirestore,
-  connectFirestoreEmulator
-} from 'firebase/firestore';
-import {
-  getStorage,
-  connectStorageEmulator
-} from 'firebase/storage';
+  browserLocalPersistence,
+} from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -30,17 +24,26 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Connect to emulators in development
-if (import.meta.env.DEV) {
-  try {
-    connectAuthEmulator(auth, 'http://localhost:9099');
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectStorageEmulator(storage, 'localhost', 9199);
-  } catch (e) {
-    // Error expected if already connected
-    console.log('Emulators already initialized');
-  }
-}
+// ⚠️ IMPORTANT: Emulator connections disabled for production backend
+// The backend is deployed to Google Cloud Run (production)
+// Using emulators would generate tokens incompatible with production verification
+//
+// If you want to use emulators:
+// 1. Deploy functions locally: firebase emulators:start
+// 2. Update VITE_CHAT_API_URL to http://localhost:5001
+// 3. Uncomment the emulator connections below
+// 4. Make sure auth/firestore emulators are running
+
+// Uncomment these lines ONLY if using local emulators:
+// if (import.meta.env.DEV) {
+//   try {
+//     connectAuthEmulator(auth, "http://localhost:9099");
+//     connectFirestoreEmulator(db, "localhost", 8080);
+//     connectStorageEmulator(storage, "localhost", 9199);
+//   } catch (e) {
+//     console.log("Emulators already initialized");
+//   }
+// }
 
 // Set persistence
 setPersistence(auth, browserLocalPersistence);

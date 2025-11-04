@@ -2,198 +2,210 @@
 
 ## Current Phase
 
-**Phase 1: Foundation MVP** - Task 1.2 Complete ✅, Task 1.3 Next
+**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 COMPLETE ✅, Task 2.4 COMPLETE ✅
 
 ## Completed Tasks
 
 - ✅ **Task 1.1:** Project Initialization & Setup
+- ✅ **Task 1.2:** Authentication System
+- ✅ **Task 1.3:** Basic Chat Interface (Frontend UI)
+- ✅ **Task 1.4:** Backend - Socratic Dialogue Engine - DEPLOYED TO PRODUCTION ✅
+- ✅ **Task 1.5:** Frontend-Backend Connection - COMPLETE ✅
+- ✅ **Task 1.6:** Math Rendering with KaTeX - COMPLETE ✅
+- ✅ **Task 1.7:** Conversation Persistence - COMPLETE ✅
+- ✅ **Task 2.1:** Image Upload UI - COMPLETE ✅
+- ✅ **Task 2.2:** OCR Backend Processing - COMPLETE ✅
+- ✅ **Task 2.3:** OCR Integration & Confirmation Flow - COMPLETE ✅
+- ✅ **Task 2.4:** Image Message Display - COMPLETE ✅
 
-  - Vite + React initialized
-  - Tailwind CSS v4 configured with custom colors
-  - All core dependencies installed
-  - Firebase project created with Auth/Firestore/Storage enabled
-  - Cloud Functions initialized (Node.js 22)
-  - Firebase emulators configured
-  - Git initialized with proper .gitignore
+## Task 2.4 - Image Message Display - COMPLETE ✅
 
-- ✅ **Task 1.2:** Authentication System - COMPLETE WITH MODERN UI/UX
+**Status:** ✅ ALL SUBTASKS COMPLETE - TESTED AND WORKING
 
-  - AuthContext created with useAuth hook (`src/contexts/AuthContext.jsx`)
-  - Auth service utilities implemented (`src/services/auth.js`)
-    - signUpWithEmail, signInWithEmail, signInWithGoogle, signOut
-    - createUserProfile for Firestore user documents
-  - SignupForm component with full validation (`src/components/auth/SignupForm.jsx`)
-    - Email, password, confirm password, display name fields
-    - Form validation with real-time error clearing
-    - react-hot-toast notifications
-    - Modern dark theme styling with pt-4 spacing
-  - LoginForm component with validation (`src/components/auth/LoginForm.jsx`)
-    - Email and password fields with "Forgot Password?" link
-    - Form validation with error messages
-    - Modern dark theme styling with proper spacing
-  - GoogleSignIn component (`src/components/auth/GoogleSignIn.jsx`)
-    - Google OAuth integration
-    - Auto profile creation for new users
-    - Modern styling with frosted glass effect
-  - LoginPage with modern dark theme (`src/pages/LoginPage.jsx`)
-    - Dark slate (9) gradient background
-    - Animated background blobs with mix-blend-multiply
-    - Frosted glass card (backdrop-blur-2xl)
-    - Gradient text headings
-  - SignupPage with modern dark theme (`src/pages/SignupPage.jsx`)
-    - Dark slate background with animated effects
-    - Frosted glass card styling
-    - All form fields with proper spacing and modern styling
-  - ProtectedRoute component (`src/components/ProtectedRoute.jsx`)
-    - Redirects unauthenticated users to login
-    - Shows loading spinner during auth check
-  - React Router fully configured in App.jsx
-  - Firestore user profiles in `users/{uid}` collection
-  - Auth state persists on page refresh
+### UI/UX Improvements Made
 
-  **CSS Fix Applied:**
+**1. Removed Optional Caption Textbox**
 
-  - Fixed `index.css` to use Tailwind's @layer directive
-  - Removed hardcoded body styles that were overriding Tailwind
-  - Enabled proper rendering of dark theme and modern effects
+- Simplified input flow - no separate caption textarea
+- Caption now goes directly in the main text input field
+- Placeholder updates: "Add caption or ask a question..." when image selected
 
-## Modern UI/UX Features Implemented
+**2. Simplified Image Preview UI**
 
-- **Dark Theme with Glassmorphism:**
+- Removed redundant preview from ImageUpload component
+- Single clean preview in InputArea with delete button
+- Reduced visual clutter and confusion
 
-  - Dark slate (900) gradient background
-  - Frosted glass cards with backdrop-blur-2xl
-  - Semi-transparent borders (white/20)
-  - Mix-blend-multiply animated background blobs
+**3. Image Modal Implementation**
 
-- **Typography & Visual Hierarchy:**
+- Click thumbnail to view full-size image
+- Modal with close button (X) and click-outside to dismiss
+- Shows caption and extracted text below image
+- Graceful error handling for broken images
 
-  - Gradient text headings (indigo-to-purple)
-  - Proper heading sizes and font weights
-  - Clear subtitle text with secondary colors
-  - Inter font family throughout
+### Firebase Storage Integration
 
-- **Form Field Styling:**
+**Problem Solved:** Images were stored as base64 in Firestore, causing:
 
-  - Semi-transparent input backgrounds (white/10)
-  - Colored borders on focus (indigo-400)
-  - Red error states (red-500/50)
-  - Smooth transitions (duration-200)
-  - Proper padding (py-3) and spacing (space-y-6)
+- Document size limit violations (1MB limit)
+- Image corruption on reload
+- Greyed-out/broken images after page refresh
 
-- **Button Styling:**
+**Solution Implemented:**
 
-  - Gradient backgrounds (indigo-to-purple)
-  - Hover color changes
-  - Shadow effects (shadow-lg, hover:shadow-xl)
-  - Active state scale transform (active:scale-95)
-  - Top padding (pt-4) for proper spacing
+- Created `uploadImageToStorage()` function to upload to Firebase Storage
+- Store only the download URL in Firestore (much smaller)
+- Images persist perfectly across page reloads
 
-- **Spacing & Layout:**
+**Files Modified:**
 
-  - Form container gap: space-y-6 (24px)
-  - Error message margin: mt-2 (8px)
-  - Button top padding: pt-4 (16px)
-  - Consistent max-width (max-w-md)
-  - Proper card padding (p-8)
+- `frontend/src/services/firestore.js` - Added Storage upload functions
+- `frontend/src/contexts/ChatContext.jsx` - Updated to use Storage URLs
+- `frontend/src/components/chat/MessageBubble.jsx` - Added image error handling
 
-- **Interactive Elements:**
-  - Smooth color transitions on hover
-  - Focus rings on interactive elements
-  - Disabled state styling
-  - Proper visual feedback
+### Infrastructure Setup
 
-## In Progress
+**Firebase Storage Configuration:**
 
-None - Task 1.2 complete
+1. ✅ Storage enabled in Firebase Console
+2. ✅ CORS configured for localhost:5173 development
+3. ✅ Security Rules updated to allow authenticated users to upload
 
-## Next Tasks
+**CORS Configuration:**
 
-- **Task 1.3:** Basic Chat UI (no backend integration yet)
+```json
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:*"
+    ],
+    "method": ["GET", "HEAD", "DELETE", "POST", "PUT"],
+    "responseHeader": ["Content-Type", "x-goog-meta-*", "x-goog-*"],
+    "maxAgeSeconds": 3600
+  }
+]
+```
 
-## MVP Completion Criteria
+**Storage Security Rules:**
 
-- ✅ Vite + React with Tailwind
-- ✅ Firebase emulators running
-- ✅ Auth system working (email/password, Google OAuth)
-- ✅ User profiles in Firestore
-- ✅ Protected routes functional
-- ✅ Auth state persistent
-- ✅ Form validation with error messages
-- ✅ Modern UI/UX with dark theme and glassmorphism
-- ✅ Proper spacing and visual hierarchy
-- ⏳ Chat UI built (pending)
-- ⏳ Socratic backend implemented (pending)
-- ⏳ Messages save to Firestore (pending)
-- ⏳ Math equations render (pending)
-- ⏳ Images upload to Firebase Storage (pending)
-- ⏳ Responsive on mobile/desktop (pending)
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if request.auth != null;
+    }
+    match /images/{userId}/{conversationId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
-## Key Decisions Made (Task 1.2)
+### Backend Optimizations
 
-1. **Context API + Hooks** for auth state management
-2. **React Router v7** for client-side routing
-3. **Form validation** both client-side and error handling
-4. **Dark theme with glassmorphism** for modern aesthetic
-5. **Tailwind-only styling** with @layer directives
-6. **Error handling with react-hot-toast** for notifications
-7. **Protected routes** redirect to login automatically
-8. **CSS configuration** using @layer base instead of hardcoded styles
+**Fixed Duplicate Message Saving:**
 
-## Technical Stack Verified
+- Removed redundant user message save from backend chat function
+- Frontend now saves user messages (especially images) first
+- Backend only saves assistant responses
+- Eliminates duplicate messages in conversations
 
-- ✅ Vite dev server with HMR
-- ✅ Tailwind CSS v4 with @import "tailwindcss"
-- ✅ Firebase Auth with emulator (port 9099)
-- ✅ Firestore with emulator (port 8080)
-- ✅ React Router v7
-- ✅ react-hot-toast for notifications
-- ✅ Modern CSS with @layer directives
-- ✅ No linting errors
+**Removed Redundant OCR History Collection:**
 
-## Known Working Components
+- Deleted unnecessary `ocrHistory` subcollection saves
+- Extracted text now stored directly in message document
+- Cleaner data structure with no redundancy
 
-- ✅ React development environment
-- ✅ Tailwind CSS with modern dark theme
-- ✅ Firebase Auth initialization
-- ✅ AuthContext and useAuth hook
-- ✅ Email/password signup and login
-- ✅ Google OAuth integration
-- ✅ Firestore user profiles
-- ✅ React Router with protected routes
-- ✅ Form validation with error messages
-- ✅ Modern, polished UI with proper spacing
-- ✅ Dark theme with glassmorphism effects
-- ✅ Responsive design on all screen sizes
+**Files Modified:**
 
-## Known Blockers / Issues
+- `functions/src/api/chat.js` - Removed user message save
+- `functions/src/api/ocr.js` - Removed ocrHistory collection save
 
-None - all features working perfectly
+### Image Error Handling
 
-## CSS Configuration Notes
+**MessageBubble Enhancements:**
 
-- **File:** `frontend/src/index.css`
-- **Pattern:** Using Tailwind's @layer directive for base styles
-- **Fixes Applied:**
-  - Removed hardcoded background-color (#f9fafb) that blocked dark theme
-  - Removed hardcoded text color (#1f2937) that conflicted with light text
-  - Now lets Tailwind manage all styling through utility classes
-  - Proper reset styles in @layer base
-  - Font family set via @apply (font-sans antialiased)
+- Added image load error detection with `onError` handler
+- Displays "Image unavailable" placeholder if load fails
+- Shows caption/description in placeholder for context
+- Graceful degradation instead of broken image icons
+- Works for both thumbnail and full-size modal
 
-## Next Steps for Task 1.3
+### Complete Image Flow (Updated)
 
-1. Create MessageBubble component for displaying chat messages
-2. Create MessageList component to manage message display
-3. Create InputArea component for user message input
-4. Create TypingIndicator component for loading states
-5. Create ChatContainer to combine all components
-6. Create Header component with user profile dropdown
-7. Create Layout component for page structure
-8. Build ChatPage component
-9. Add basic message state management
-10. Style everything with modern dark theme
+```
+User Uploads Image
+↓
+ImageUpload component → InputArea preview with delete button
+↓
+User types caption/question in main input (no separate textbox)
+↓
+User clicks Send
+↓
+ChatContext.sendConfirmedOCRText()
+↓
+uploadImageToStorage() → Firebase Storage
+↓
+Get Storage URL (not base64!)
+↓
+Save to Firestore with Storage URL
+↓
+Send extracted text to chat API
+↓
+Display image with Storage URL (crisp and clean)
+↓
+Reload page → Image still displays perfectly!
+```
 
-## Ready for Next Phase ✅
+### Features Implemented
 
-All authentication infrastructure is complete with a beautiful, modern UI. Ready to begin Task 1.3 (Basic Chat UI).
+✅ **Image Display:**
+
+- Images show as clean thumbnails (max 300px)
+- No more greyed-out or broken images after reload
+- Sharp and perfectly rendered
+
+✅ **Image Modal:**
+
+- Click thumbnail to view full-size
+- Professional modal with proper styling
+- Shows caption and extracted text
+
+✅ **Error Handling:**
+
+- Broken images show placeholder instead of error icon
+- User-friendly "Image unavailable" message
+- Graceful degradation
+
+✅ **Data Storage:**
+
+- Images stored in Firebase Storage
+- Only URLs stored in Firestore (small documents)
+- Images persist across page reloads
+- Scalable solution for many images
+
+✅ **Message Deduplication:**
+
+- No more duplicate messages
+- Frontend saves user messages first
+- Backend only saves responses
+- Clean, consistent message history
+
+### Testing Completed
+
+- ✅ Upload image → displays properly
+- ✅ Reload page → image persists, displays perfectly (no greying)
+- ✅ View full size → modal opens with image and text
+- ✅ Multiple images → all display correctly
+- ✅ Image errors → graceful placeholder shown
+- ✅ Message history → clean, no duplicates
+
+### Next: Task 3.1 - Sidebar Component
+
+- Build conversation list sidebar
+- Group conversations by date
+- Delete conversation functionality
+- Mobile drawer support

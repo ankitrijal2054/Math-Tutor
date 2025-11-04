@@ -1,0 +1,209 @@
+import React, { useState } from "react";
+import { MessageCircle, X } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import MathRenderer from "../shared/MathRenderer";
+
+const MessageBubble = ({
+  role,
+  content,
+  timestamp,
+  type = "text",
+  caption,
+  extractedText,
+}) => {
+  const [showTimestamp, setShowTimestamp] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const { user } = useAuth();
+
+  const isUser = role === "user";
+  const isAssistant = role === "assistant";
+  const isImage = type === "image";
+
+  // Format timestamp for display
+  const formatTime = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Get user initial from displayName or email
+  const getUserInitial = () => {
+    if (user?.displayName) {
+      return user.displayName.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
+
+  return (
+    <>
+      <div
+        className={`flex gap-3 mb-4 animate-fadeIn ${
+          isUser ? "justify-end" : "justify-start"
+        }`}
+        onMouseEnter={() => setShowTimestamp(true)}
+        onMouseLeave={() => setShowTimestamp(false)}
+      >
+        {/* Assistant Avatar */}
+        {isAssistant && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-white" />
+          </div>
+        )}
+
+        {/* Message Content */}
+        <div
+          className={`max-w-xs lg:max-w-md flex flex-col ${
+            isUser ? "items-end" : "items-start"
+          }`}
+        >
+          {/* Image Message */}
+          {isImage && isUser && (
+            <div
+              className="relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 p-1"
+              onClick={() => setShowImageModal(true)}
+            >
+              {imageLoadError ? (
+                <div className="h-40 w-40 bg-slate-600 rounded-xl flex flex-col items-center justify-center text-center p-4">
+                  <div className="text-white text-sm">Image unavailable</div>
+                  <div className="text-xs text-slate-300 mt-1">
+                    {caption || "Math problem image"}
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={content}
+                  alt="User uploaded"
+                  className="h-40 w-40 object-cover rounded-xl group-hover:opacity-80 transition-opacity"
+                  onError={() => setImageLoadError(true)}
+                />
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors rounded-2xl">
+                <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100">
+                  View Full
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Text Message or Caption with Extracted Text*/}
+          {(caption || extractedText) && isImage && (
+            <div
+              className={`px-4 py-2 rounded-2xl shadow-lg transition-all duration-200 mb-2 ${
+                isUser
+                  ? "bg-white text-slate-900 rounded-br-none"
+                  : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+              }`}
+            >
+              {caption && (
+                <div className="text-sm leading-relaxed italic text-opacity-80 mb-1">
+                  {caption}
+                </div>
+              )}
+              {extractedText && extractedText !== caption && (
+                <div className="text-xs leading-relaxed opacity-75 border-t border-current pt-1">
+                  <span className="font-semibold">Extracted: </span>
+                  {extractedText}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Regular Text Message */}
+          {!isImage && (
+            <div
+              className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
+                isUser
+                  ? "bg-white text-slate-900 rounded-br-none"
+                  : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+              }`}
+            >
+              <div className="text-sm leading-relaxed">
+                <MathRenderer content={content} />
+              </div>
+            </div>
+          )}
+
+          {/* Timestamp - Always reserve space, show on hover */}
+          <p
+            className={`text-xs mt-1 h-4 transition-all duration-200 ${
+              showTimestamp && timestamp
+                ? "text-slate-400 opacity-100"
+                : "text-transparent opacity-0"
+            }`}
+          >
+            {timestamp ? formatTime(timestamp) : "00:00"}
+          </p>
+        </div>
+
+        {/* User Avatar */}
+        {isUser && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <span className="text-xs font-semibold text-white">
+              {getUserInitial()}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Image Modal */}
+      {showImageModal && isImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div
+            className="relative max-w-3xl max-h-[90vh] bg-white rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 rounded-full p-2 text-white transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {imageLoadError ? (
+              <div className="w-full h-[80vh] bg-slate-800 flex flex-col items-center justify-center">
+                <div className="text-white text-lg">Image unavailable</div>
+                <div className="text-slate-400 mt-2">
+                  {caption || "This image could not be loaded"}
+                </div>
+              </div>
+            ) : (
+              <img
+                src={content}
+                alt="Full size"
+                className="w-full h-full object-contain"
+                onError={() => setImageLoadError(true)}
+              />
+            )}
+            {(caption || extractedText) && (
+              <div className="bg-slate-800 text-white p-3 text-sm space-y-2">
+                {caption && (
+                  <p>
+                    <span className="font-semibold">Caption:</span> {caption}
+                  </p>
+                )}
+                {extractedText && extractedText !== caption && (
+                  <p>
+                    <span className="font-semibold">Extracted Text:</span>{" "}
+                    {extractedText}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default MessageBubble;
