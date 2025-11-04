@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+import React, {
+  useState,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { Plus } from "lucide-react";
 import ConversationList from "./ConversationList";
 import { useAuth } from "../../contexts/AuthContext";
@@ -12,10 +17,21 @@ import toast from "react-hot-toast";
  * @param {boolean} props.isMobileOpen - Whether sidebar drawer is open on mobile
  * @param {Function} props.onMobileClose - Callback to close mobile drawer
  */
-const Sidebar = ({ isMobileOpen = false, onMobileClose = () => {} }) => {
+const SidebarComponent = (
+  { isMobileOpen = false, onMobileClose = () => {} },
+  ref
+) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
+  const conversationListRef = useRef(null);
+
+  // Expose refetchConversations via ref
+  useImperativeHandle(ref, () => ({
+    refetchConversations: () => {
+      conversationListRef.current?.refetchConversations();
+    },
+  }));
 
   /**
    * Handle new conversation creation
@@ -60,10 +76,13 @@ const Sidebar = ({ isMobileOpen = false, onMobileClose = () => {} }) => {
 
       {/* Conversation List - Scrollable */}
       <div className="flex-1 overflow-y-auto">
-        <ConversationList onSelectConversation={onMobileClose} />
+        <ConversationList
+          ref={conversationListRef}
+          onSelectConversation={onMobileClose}
+        />
       </div>
     </aside>
   );
 };
 
-export default Sidebar;
+export default forwardRef(SidebarComponent);

@@ -19,6 +19,7 @@ const MessageBubble = ({
   const isUser = role === "user";
   const isAssistant = role === "assistant";
   const isImage = type === "image";
+  const isWhiteboard = type === "whiteboard";
 
   // Format timestamp for display
   const formatTime = (date) => {
@@ -63,23 +64,32 @@ const MessageBubble = ({
             isUser ? "items-end" : "items-start"
           }`}
         >
-          {/* Image Message */}
-          {isImage && isUser && (
+          {/* Image/Whiteboard Message */}
+          {(isImage || isWhiteboard) && isUser && (
             <div
-              className="relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 p-1"
+              className={`relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 ${
+                isWhiteboard
+                  ? "bg-gradient-to-br from-blue-500 to-cyan-500 p-1"
+                  : "bg-gradient-to-r from-indigo-500 to-purple-600 p-1"
+              }`}
               onClick={() => setShowImageModal(true)}
             >
               {imageLoadError ? (
                 <div className="h-40 w-40 bg-slate-600 rounded-xl flex flex-col items-center justify-center text-center p-4">
-                  <div className="text-white text-sm">Image unavailable</div>
+                  <div className="text-white text-sm">
+                    {isWhiteboard
+                      ? "Whiteboard unavailable"
+                      : "Image unavailable"}
+                  </div>
                   <div className="text-xs text-slate-300 mt-1">
-                    {caption || "Math problem image"}
+                    {caption ||
+                      (isWhiteboard ? "Drawing" : "Math problem image")}
                   </div>
                 </div>
               ) : (
                 <img
                   src={content}
-                  alt="User uploaded"
+                  alt={isWhiteboard ? "Whiteboard drawing" : "User uploaded"}
                   className="h-40 w-40 object-cover rounded-xl group-hover:opacity-80 transition-opacity"
                   onError={() => setImageLoadError(true)}
                 />
@@ -89,11 +99,16 @@ const MessageBubble = ({
                   View Full
                 </span>
               </div>
+              {isWhiteboard && (
+                <div className="absolute top-1 right-1 bg-blue-600/90 text-white text-xs px-2 py-1 rounded-md font-semibold">
+                  Drawing
+                </div>
+              )}
             </div>
           )}
 
           {/* Text Message or Caption with Extracted Text*/}
-          {(caption || extractedText) && isImage && (
+          {(caption || extractedText) && (isImage || isWhiteboard) && (
             <div
               className={`px-4 py-2 rounded-2xl shadow-lg transition-all duration-200 mb-2 ${
                 isUser
@@ -116,7 +131,7 @@ const MessageBubble = ({
           )}
 
           {/* Regular Text Message */}
-          {!isImage && (
+          {!isImage && !isWhiteboard && (
             <div
               className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
                 isUser
@@ -153,7 +168,7 @@ const MessageBubble = ({
       </div>
 
       {/* Image Modal */}
-      {showImageModal && isImage && (
+      {showImageModal && (isImage || isWhiteboard) && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
           onClick={() => setShowImageModal(false)}

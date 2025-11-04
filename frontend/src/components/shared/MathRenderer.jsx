@@ -13,7 +13,7 @@ const MathRenderer = ({ content }) => {
   const segments = parseContent(content);
 
   return (
-    <div className="break-words">
+    <div className="w-full">
       {segments.map((segment, index) => {
         if (segment.type === "text") {
           return (
@@ -53,7 +53,7 @@ function parseContent(content) {
 
   // Regex to find block math ($$...$$) and inline math ($...$)
   // We need to prioritize block math ($$ patterns) over inline math
-  const regex = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g;
+  const regex = /(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g;
 
   let match;
   while ((match = regex.exec(content)) !== null) {

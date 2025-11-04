@@ -31,13 +31,14 @@ export const ChatProvider = ({ children }) => {
     confidence: null,
     error: null,
     originalImage: null, // Store original image for re-upload flow
+    messageType: "image", // Track if this is "image" or "whiteboard"
   });
 
   /**
    * Process image with OCR and show confirmation
    */
   const processImageWithOCR = useCallback(
-    async (imageDataURL) => {
+    async (imageDataURL, messageType = "image") => {
       try {
         setOCRState((prev) => ({
           ...prev,
@@ -45,19 +46,24 @@ export const ChatProvider = ({ children }) => {
           error: null,
           imageDataURL,
           originalImage: imageDataURL,
+          messageType, // Store whether this is "image" or "whiteboard"
         }));
 
         // Create conversation if it doesn't exist yet (lazy creation)
         let convId = conversationId;
         if (!convId) {
-          convId = await createConversation("Image upload");
+          const defaultTitle =
+            messageType === "whiteboard"
+              ? "Whiteboard drawing"
+              : "Image upload";
+          convId = await createConversation(defaultTitle);
           setConversationId(convId);
 
           // Initialize metadata for new conversation
           setConversationMetadata({
             id: convId,
             userId: auth.currentUser.uid,
-            title: "Image upload",
+            title: defaultTitle,
             messageCount: 0,
             lastMessage: null,
             createdAt: new Date().toISOString(),
@@ -144,7 +150,7 @@ export const ChatProvider = ({ children }) => {
           convId,
           "user",
           imageStorageURL,
-          "image",
+          ocrState.messageType || "image", // Use stored message type (image or whiteboard)
           {
             caption: confirmedText,
             extractedText: confirmedText,
@@ -155,7 +161,7 @@ export const ChatProvider = ({ children }) => {
         const userMessageObj = {
           id: messageId,
           role: "user",
-          type: "image",
+          type: ocrState.messageType || "image", // Use stored message type (image or whiteboard)
           content: imageStorageURL,
           caption: confirmedText,
           extractedText: confirmedText,
@@ -236,6 +242,13 @@ export const ChatProvider = ({ children }) => {
         // If this is an image, trigger OCR flow instead of direct send
         if (messageType === "image") {
           await processImageWithOCR(messageContent);
+          return;
+        }
+
+        // If this is a whiteboard, also trigger OCR flow to extract text from drawing
+        if (messageType === "whiteboard") {
+          // Store the drawing image for OCR processing
+          await processImageWithOCR(messageContent, "whiteboard");
           return;
         }
 

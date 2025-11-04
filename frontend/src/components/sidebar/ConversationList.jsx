@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { loadUserConversations } from "../../services/firestore";
@@ -12,7 +18,10 @@ import toast from "react-hot-toast";
  * ConversationList component - fetches and displays grouped conversations
  * @param {Function} onSelectConversation - Callback when conversation is selected (for mobile drawer close)
  */
-const ConversationList = ({ onSelectConversation = () => {} }) => {
+const ConversationListComponent = (
+  { onSelectConversation = () => {} },
+  ref
+) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { conversationId: activeConvId } = useParams();
@@ -25,33 +34,38 @@ const ConversationList = ({ onSelectConversation = () => {} }) => {
   /**
    * Fetch conversations for current user
    */
-  useEffect(() => {
-    const fetchConversations = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+  const fetchConversations = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        setError(null);
-        const convos = await loadUserConversations(user.uid);
-        setConversations(convos);
+    try {
+      setLoading(true);
+      setError(null);
+      const convos = await loadUserConversations(user.uid);
+      setConversations(convos);
 
-        // Group conversations by date
-        const grouped = groupConversationsByDate(convos);
-        setGroupedConversations(grouped);
-      } catch (err) {
-        console.error("Error loading conversations:", err);
-        setError(err.message || "Failed to load conversations");
-        toast.error("Failed to load conversations");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConversations();
+      // Group conversations by date
+      const grouped = groupConversationsByDate(convos);
+      setGroupedConversations(grouped);
+    } catch (err) {
+      console.error("Error loading conversations:", err);
+      setError(err.message || "Failed to load conversations");
+      toast.error("Failed to load conversations");
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  // Expose fetchConversations via ref so it can be called from ChatContext
+  useImperativeHandle(ref, () => ({
+    refetchConversations: fetchConversations,
+  }));
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   /**
    * Handle conversation deletion - update local state and navigate if needed
@@ -157,7 +171,7 @@ const ConversationList = ({ onSelectConversation = () => {} }) => {
               <div key={key} className="mb-4">
                 {/* Section Header */}
                 <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {label}
+                  {"CONVERSATIONS"}
                 </div>
 
                 {/* Conversations in this group */}
@@ -182,4 +196,4 @@ const ConversationList = ({ onSelectConversation = () => {} }) => {
   );
 };
 
-export default ConversationList;
+export default forwardRef(ConversationListComponent);

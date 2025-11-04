@@ -92,7 +92,7 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
         onClick={handleCameraClick}
         disabled={disabled}
         title="Upload image from file or camera"
-        className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
+        className="h-full px-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200 flex items-center justify-center"
       >
         <Upload className="w-5 h-5" />
       </button>
