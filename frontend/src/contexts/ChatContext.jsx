@@ -417,6 +417,17 @@ export const ChatProvider = ({ children }) => {
     }
   }, []);
 
+  /**
+   * Clear chat state when no active conversation
+   */
+  const clearChat = useCallback(() => {
+    setMessages([]);
+    setConversationId(null);
+    setConversationMetadata(null);
+    setError(null);
+    clearOCRState();
+  }, [clearOCRState]);
+
   const value = {
     messages,
     isLoading,
@@ -429,6 +440,7 @@ export const ChatProvider = ({ children }) => {
     switchConversation,
     setConversationId,
     setMessages,
+    clearChat,
     // OCR state and handlers
     ocrState,
     processImageWithOCR,

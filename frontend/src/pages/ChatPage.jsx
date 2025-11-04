@@ -7,7 +7,7 @@ import { useChatContext } from "../contexts/ChatContext";
 const ChatPage = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
-  const { loadConversation, conversationId: contextConvId } = useChatContext();
+  const { loadConversation, clearChat } = useChatContext();
 
   useEffect(() => {
     const initializeConversation = async () => {
@@ -15,16 +15,17 @@ const ChatPage = () => {
         if (conversationId) {
           // Load existing conversation from URL
           await loadConversation(conversationId);
+        } else {
+          // No conversationId: clear chat state (e.g., after deleting all conversations)
+          clearChat();
         }
-        // If no conversationId: don't create one yet
-        // Let user send a message first, which will create the conversation
       } catch (error) {
         console.error("Failed to load conversation:", error);
       }
     };
 
     initializeConversation();
-  }, [conversationId, loadConversation]);
+  }, [conversationId, loadConversation, clearChat]);
 
   return (
     <Layout>
