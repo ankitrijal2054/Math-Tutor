@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { auth } from "../services/firebase";
-import { callChatAPI } from "../services/api";
+import { callChatAPI, callOCRAPI } from "../services/api";
 import {
   createConversation,
   loadMessages,
@@ -20,6 +20,146 @@ export const ChatProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [conversationMetadata, setConversationMetadata] = useState(null);
+
+  // OCR state management
+  const [ocrState, setOCRState] = useState({
+    isProcessing: false,
+    imageDataURL: null,
+    extractedText: null,
+    confidence: null,
+    error: null,
+    originalImage: null, // Store original image for re-upload flow
+  });
+
+  /**
+   * Process image with OCR and show confirmation
+   */
+  const processImageWithOCR = useCallback(
+    async (imageDataURL) => {
+      try {
+        setOCRState((prev) => ({
+          ...prev,
+          isProcessing: true,
+          error: null,
+          imageDataURL,
+          originalImage: imageDataURL,
+        }));
+
+        // Call OCR API
+        const result = await callOCRAPI(imageDataURL, conversationId);
+
+        setOCRState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          extractedText: result.extractedText,
+          confidence: result.confidence,
+          error: null,
+        }));
+
+        toast.success("Text extracted successfully!");
+      } catch (err) {
+        console.error("OCR error:", err);
+        setOCRState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          error: err.message || "Failed to extract text from image",
+          extractedText: null,
+          confidence: null,
+        }));
+        toast.error("Failed to extract text from image");
+      }
+    },
+    [conversationId]
+  );
+
+  /**
+   * Clear OCR state
+   */
+  const clearOCRState = useCallback(() => {
+    setOCRState({
+      isProcessing: false,
+      imageDataURL: null,
+      extractedText: null,
+      confidence: null,
+      error: null,
+      originalImage: null,
+    });
+  }, []);
+
+  /**
+   * Send confirmed OCR text as message
+   */
+  const sendConfirmedOCRText = useCallback(
+    async (confirmedText, imageDataURL) => {
+      if (!conversationId) {
+        setError("No active conversation");
+        clearOCRState();
+        return;
+      }
+
+      try {
+        setError(null);
+        setIsLoading(true);
+
+        // Add user message with image and extracted text
+        const userMessageObj = {
+          id: `msg_${Date.now()}`,
+          role: "user",
+          type: "image",
+          content: imageDataURL,
+          caption: confirmedText,
+          extractedText: confirmedText,
+          timestamp: new Date().toISOString(),
+        };
+
+        setMessages((prev) => [...prev, userMessageObj]);
+
+        // Send extracted text to chat API
+        const response = await callChatAPI(conversationId, confirmedText);
+
+        if (!response.success) {
+          throw new Error(response.error || "Failed to get response");
+        }
+
+        // Add AI response
+        const aiMessageObj = {
+          id: response.messageId,
+          role: "assistant",
+          type: "text",
+          content: response.message,
+          timestamp: response.timestamp,
+        };
+
+        setMessages((prev) => [...prev, aiMessageObj]);
+
+        // Update conversation title if first message
+        if (messages.length === 0) {
+          const title = confirmedText.trim().substring(0, 50);
+          await updateConversation(conversationId, { title });
+          setConversationMetadata((prev) => ({
+            ...prev,
+            title,
+          }));
+        }
+
+        // Clear OCR state and show success
+        clearOCRState();
+        toast.success("Problem sent to tutor!");
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Send message error:", err);
+        setError(err.message);
+        setIsLoading(false);
+        toast.error(err.message || "Failed to send message. Please try again.");
+
+        // Remove optimistic message
+        setMessages((prev) =>
+          prev.filter((msg) => msg.id !== `msg_${Date.now()}`)
+        );
+      }
+    },
+    [conversationId, messages.length, clearOCRState]
+  );
 
   /**
    * Send a message and get AI response
@@ -47,6 +187,12 @@ export const ChatProvider = ({ children }) => {
 
       if (!messageContent.trim()) {
         setError("Message cannot be empty");
+        return;
+      }
+
+      // If this is an image, trigger OCR flow instead of direct send
+      if (messageType === "image") {
+        await processImageWithOCR(messageContent);
         return;
       }
 
@@ -119,7 +265,7 @@ export const ChatProvider = ({ children }) => {
         );
       }
     },
-    [conversationId, messages.length]
+    [conversationId, messages.length, processImageWithOCR]
   );
 
   /**
@@ -195,6 +341,11 @@ export const ChatProvider = ({ children }) => {
     createNewConversation,
     setConversationId,
     setMessages,
+    // OCR state and handlers
+    ocrState,
+    processImageWithOCR,
+    clearOCRState,
+    sendConfirmedOCRText,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

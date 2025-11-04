@@ -87,13 +87,15 @@ export const updateConversation = async (conversationId, updates) => {
  * @param {string} role - "user" or "assistant"
  * @param {string} content - Message content
  * @param {string} type - Message type (default "text")
+ * @param {Object} additionalData - Additional fields (caption, extractedText, etc)
  * @returns {Promise<string>} The message ID
  */
 export const saveMessage = async (
   conversationId,
   role,
   content,
-  type = "text"
+  type = "text",
+  additionalData = {}
 ) => {
   if (!auth.currentUser) {
     throw new Error("User not authenticated");
@@ -113,6 +115,7 @@ export const saveMessage = async (
       type,
       timestamp: serverTimestamp(),
       userId: auth.currentUser.uid,
+      ...additionalData, // Include caption, extractedText, etc
     });
 
     // Update conversation metadata
@@ -123,7 +126,7 @@ export const saveMessage = async (
     await updateDoc(conversationRef, {
       messageCount: currentCount + 1,
       updatedAt: serverTimestamp(),
-      lastMessage: content,
+      lastMessage: additionalData.caption || content,
     });
 
     return messageDoc.id;
@@ -161,6 +164,8 @@ export const loadMessages = async (conversationId) => {
         role: data.role,
         content: data.content,
         type: data.type || "text",
+        caption: data.caption,
+        extractedText: data.extractedText,
         timestamp:
           data.timestamp?.toDate?.()?.toISOString?.() ||
           new Date().toISOString(),

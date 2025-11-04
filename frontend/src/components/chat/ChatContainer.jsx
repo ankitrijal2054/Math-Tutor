@@ -1,15 +1,66 @@
-import React from "react";
+import React, { useState } from "react";
 import MessageList from "./MessageList";
 import InputArea from "./InputArea";
 import TypingIndicator from "./TypingIndicator";
+import OCRConfirmation from "./OCRConfirmation";
+import OCRError from "./OCRError";
 import { useChatContext } from "../../contexts/ChatContext";
 
 const ChatContainer = () => {
-  const { messages, isLoading, sendMessage, error } = useChatContext();
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    error,
+    ocrState,
+    clearOCRState,
+    sendConfirmedOCRText,
+    processImageWithOCR,
+  } = useChatContext();
+
+  const [showTypeManually, setShowTypeManually] = useState(false);
 
   // Handle sending a message
   const handleSend = (userMessage) => {
     sendMessage(userMessage);
+  };
+
+  // Handle OCR confirmation
+  const handleOCRConfirm = (confirmedText) => {
+    if (ocrState.imageDataURL && confirmedText.trim()) {
+      sendConfirmedOCRText(confirmedText, ocrState.imageDataURL);
+    }
+  };
+
+  // Handle OCR re-upload
+  const handleOCRReupload = () => {
+    clearOCRState();
+    setShowTypeManually(false);
+  };
+
+  // Handle OCR error - retry
+  const handleOCRRetry = async () => {
+    if (ocrState.originalImage) {
+      await processImageWithOCR(ocrState.originalImage);
+    }
+  };
+
+  // Handle OCR error - type manually
+  const handleTypeManually = () => {
+    setShowTypeManually(true);
+  };
+
+  // Handle cancel manual typing
+  const handleCancelManual = () => {
+    setShowTypeManually(false);
+  };
+
+  // Handle send manual text
+  const handleSendManualText = (text) => {
+    if (text.trim()) {
+      sendConfirmedOCRText(text, ocrState.originalImage || "");
+      setShowTypeManually(false);
+    }
   };
 
   return (
@@ -35,6 +86,99 @@ const ChatContainer = () => {
 
       {/* Input Area */}
       <InputArea onSend={handleSend} disabled={isLoading} />
+
+      {/* OCR Confirmation Modal */}
+      {ocrState.extractedText && !ocrState.error && (
+        <OCRConfirmation
+          imageDataURL={ocrState.imageDataURL}
+          extractedText={ocrState.extractedText}
+          confidence={ocrState.confidence}
+          onConfirm={handleOCRConfirm}
+          onEdit={() => {}} // Edit is handled in the component itself
+          onReupload={handleOCRReupload}
+          isLoading={isLoading}
+        />
+      )}
+
+      {/* OCR Error Modal */}
+      {ocrState.error && (
+        <OCRError
+          error={ocrState.error}
+          imageDataURL={ocrState.originalImage}
+          onRetry={handleOCRRetry}
+          onTypeManually={handleTypeManually}
+          onClose={clearOCRState}
+          isLoading={ocrState.isProcessing}
+        />
+      )}
+
+      {/* Manual Text Input Modal */}
+      {showTypeManually && (
+        <ManualTextInput
+          onSend={handleSendManualText}
+          onCancel={handleCancelManual}
+          isLoading={isLoading}
+        />
+      )}
+    </div>
+  );
+};
+
+/**
+ * ManualTextInput component - Fallback for when OCR fails
+ */
+const ManualTextInput = ({ onSend, onCancel, isLoading }) => {
+  const [text, setText] = React.useState("");
+
+  const handleSend = () => {
+    if (text.trim()) {
+      onSend(text.trim());
+      setText("");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
+      <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+          <h2 className="text-white font-semibold text-lg">
+            Type Problem Manually
+          </h2>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-4">
+          <p className="text-slate-300 text-sm">
+            Please type the math problem you'd like help with:
+          </p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Example: Solve 2x + 5 = 13"
+            disabled={isLoading}
+            className="w-full h-32 p-3 bg-slate-700 text-white border border-slate-600 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none text-sm"
+          />
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 justify-end pt-4 border-t border-slate-700">
+            <button
+              onClick={onCancel}
+              disabled={isLoading}
+              className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={isLoading || !text.trim()}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            >
+              {isLoading ? "Sending..." : "Send"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 Next
+**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 COMPLETE ✅, Task 2.4 Next
 
 ## Completed Tasks
 
@@ -15,225 +15,209 @@
 - ✅ **Task 1.7:** Conversation Persistence - COMPLETE ✅
 - ✅ **Task 2.1:** Image Upload UI - COMPLETE ✅
 - ✅ **Task 2.2:** OCR Backend Processing - COMPLETE ✅
+- ✅ **Task 2.3:** OCR Integration & Confirmation Flow - COMPLETE ✅
 
-## Task 2.2 - OCR Backend Processing - COMPLETE ✅
+## Task 2.3 - OCR Integration & Confirmation Flow - COMPLETE ✅
 
-**Status:** ✅ ALL SUBTASKS COMPLETE - Ready for Deployment and Frontend Integration
+**Status:** ✅ ALL SUBTASKS COMPLETE - Ready for Testing
 
-### Backend Files Created/Updated
+### Frontend Components Created
 
-1. **functions/src/api/ocr.js** - NEW OCR Cloud Function (195 lines)
+1. **OCRConfirmation.jsx** - NEW (85 lines)
 
-   - POST /ocr endpoint with CORS configuration
-   - Firebase ID token authentication and verification
-   - Request validation (imageDataURL, conversationId, format checking)
-   - OpenAI Vision API integration with extractTextFromImage()
-   - Text normalization (trim, deduplicate newlines, clean whitespace)
-   - Confidence level determination (high/medium/low based on extraction quality)
-   - Special marker detection ([IMAGE_TOO_UNCLEAR], [NOT_A_MATH_PROBLEM])
-   - OCR history storage to Firestore (ocrHistory subcollection)
-   - Comprehensive error handling with appropriate HTTP status codes
-   - Response format: { success, extractedText, confidence, timestamp, notes }
+   - Modal component showing extracted text from OCR
+   - Side-by-side image preview and extracted text display
+   - Editable textarea for reviewing/correcting extracted text
+   - Confidence indicator (High/Medium/Low) with visual feedback
+   - Three action buttons:
+     - ✓ Confirm (sends extracted text)
+     - ✏️ Edit (toggles edit mode for text)
+     - 🔄 Re-upload (clears and allows new image)
+   - Professional styling with gradient header and smooth animations
 
-2. **functions/src/utils/openai.js** - ENHANCED
+2. **OCRError.jsx** - NEW (85 lines)
 
-   - Added `extractTextFromImage(imageDataURL, prompt, options)` function
-   - Vision API integration using gpt-4o-mini model
-   - Support for base64 data URLs (data:image/jpeg;base64,...)
-   - Exponential backoff retry logic (3 retries with jitter)
-   - Error handling for rate limits, network issues, API failures
-   - Configurable max_tokens (default 300 for image text extraction)
+   - Modal component for handling OCR failures
+   - Intelligent error message display based on error type:
+     - Image too blurry/unclear
+     - Not a math problem
+     - Invalid image format
+     - Generic processing errors
+   - Image preview showing original upload
+   - Helpful suggestions for what user can do
+   - Three action buttons:
+     - Cancel (closes modal)
+     - Type Manually (fallback text input)
+     - Retry (re-processes same image)
 
-3. **functions/src/utils/prompts.js** - ENHANCED
+3. **ManualTextInput** (in ChatContainer) - NEW (40 lines)
+   - Modal for fallback when OCR fails
+   - Simple text area for manual problem input
+   - Two buttons: Cancel, Send
+   - Used when user chooses "Type Manually" option
 
-   - Added `OCR_EXTRACTION_PROMPT` constant
-   - Instructions for accurate math problem extraction
-   - LaTeX formatting preservation ($...$ and $$...$$)
-   - Handwriting interpretation guidelines
-   - Irrelevant content filtering (headers, page numbers, stray marks)
-   - Multi-part problem handling
-   - Special output markers for edge cases
+### ChatContext Enhancements
 
-4. **functions/index.js** - UPDATED
-   - Added OCR function import and export
-   - OCR function now available as Cloud Function endpoint
+**New State:**
 
-### Frontend Enhancement
+```javascript
+ocrState = {
+  isProcessing: boolean, // OCR API call in progress
+  imageDataURL: string, // Current image being processed
+  extractedText: string, // Extracted text from OCR
+  confidence: "high" | "medium" | "low", // OCR confidence level
+  error: string, // Error message if OCR fails
+  originalImage: string, // Store original for re-attempts
+};
+```
 
-1. **frontend/src/services/api.js** - ENHANCED
-   - Added `callOCRAPI(imageDataURL, conversationId)` function
-   - Firebase authentication via ID token
-   - Endpoint auto-detection (VITE_OCR_API_URL or derived from VITE_CHAT_API_URL)
-   - Request validation and error handling
-   - Response parsing with extractedText, confidence, notes
-   - Comprehensive error messages for debugging
+**New Functions:**
+
+- `processImageWithOCR(imageDataURL)` - Calls OCR API and manages extraction
+- `clearOCRState()` - Resets OCR state to initial
+- `sendConfirmedOCRText(confirmedText, imageDataURL)` - Sends confirmed text to chat
+
+**Modified sendMessage:**
+
+- Now intercepts image type messages
+- Triggers OCR flow instead of direct send
+- Maintains backward compatibility with text messages
+
+### ChatContainer Integration
+
+**New Features:**
+
+- Displays OCRConfirmation modal when extraction succeeds
+- Displays OCRError modal when extraction fails
+- Shows ManualTextInput modal for fallback text entry
+- Handles all modal actions (confirm, edit, retry, re-upload, manual)
+- Seamless flow between error states and fallback options
+
+### Firestore Updates
+
+**Enhanced saveMessage function:**
+
+- Now accepts `additionalData` parameter for image-specific fields
+- Supports storing: caption, extractedText, and any other metadata
+- Properly updates conversation lastMessage with caption if available
+
+**Enhanced loadMessages function:**
+
+- Now loads caption and extractedText fields for image messages
+- Preserves all image metadata when loading conversations
+
+### MessageBubble Updates
+
+**Image Message Display:**
+
+- Displays both caption and extractedText (if different)
+- Caption shown as italic user note
+- Extracted text shown separately with "Extracted:" label
+- Both shown together in message preview
+- Full details displayed in image modal
+
+### Complete Image Upload Flow
+
+```
+User Uploads Image
+↓
+ImageUpload component → select image
+↓
+InputArea → show preview
+↓
+User clicks Send
+↓
+ChatContainer → sendMessage() with type: 'image'
+↓
+ChatContext → processImageWithOCR()
+↓
+callOCRAPI() → OpenAI Vision
+↓
+✓ Success → Show OCRConfirmation Modal
+✗ Failure → Show OCRError Modal
+        ├─ User clicks Retry → Re-run OCR
+        ├─ User clicks Type Manually → Show ManualTextInput
+        └─ User clicks Cancel → Clear state
+↓
+User confirms (or edits) text
+↓
+sendConfirmedOCRText()
+↓
+Add user message with image + extracted text
+↓
+Send extracted text to chat API
+↓
+Get AI response
+↓
+Display image message with extracted text in chat
+↓
+Save everything to Firestore
+```
 
 ### Features Implemented
 
-✅ Authentication & Security:
+✅ **OCR Processing:**
 
-- Firebase ID token verification required
-- User ID validation
-- Secure endpoint access control
+- Calls OCR API with image data URL
+- Handles extraction results with confidence levels
+- Manages loading states during processing
 
-✅ Image Processing:
+✅ **Confirmation UI:**
 
-- Base64 data URL validation
-- Format verification (data:image/...)
-- Support for all image types (jpg, png, heic, webp, etc.)
+- Clean modal presentation
+- Side-by-side image and text preview
+- Editable text for corrections
+- Confidence indicator with visual feedback
 
-✅ Vision API Integration:
+✅ **Error Handling:**
 
-- OpenAI GPT-4o-mini Vision capabilities
-- Exponential backoff retry (3 attempts with jitter)
-- Rate limit handling (429, 500, 502, 503 errors)
-- Network resilience (connection reset, timeout)
+- Intelligent error messages based on error type
+- Helpful suggestions for users
+- Retry capability for transient failures
+- Fallback to manual text input
 
-✅ Text Extraction & Normalization:
+✅ **Edit Capability:**
 
-- LaTeX preservation ($x^2 + 5 = 13$ format)
-- Whitespace normalization
-- Multiple newline deduplication
-- Empty result detection
-- Special marker identification
+- Users can edit extracted text before sending
+- Toggle between view and edit mode
+- Cancel to discard edits
 
-✅ Confidence Scoring:
+✅ **Re-upload Option:**
 
-- High: Multi-line extractions without ambiguity
-- Medium: Standard extractions, single line or short problems
-- Low: Short extractions, ambiguous content, unclear images
+- Users can discard extraction and try again
+- Clears state for fresh upload
+- No lost state between attempts
 
-✅ Error Handling:
+✅ **Message Persistence:**
 
-- Image too blurry/unclear (status 422)
-- Not a math problem (status 422)
-- Invalid image format (status 400)
-- Missing required fields (status 400)
-- Authentication failures (status 401)
-- API failures with retry (status 500)
-- Non-critical: OCR history logging failure (warning only)
+- Image, caption, and extracted text saved to Firestore
+- All metadata preserved when loading conversations
+- Properly displayed in chat history
 
-✅ Data Storage:
+✅ **State Management:**
 
-- OCR history saved to Firestore (conversations/{id}/ocrHistory)
-- Stores: originalText, normalizedText, confidence, timestamp, uid
-- Non-blocking: doesn't fail the request if storage fails
+- Clean OCR state in ChatContext
+- Proper cleanup of modals
+- Seamless integration with existing chat flow
 
-### Response Format
+### Testing Checklist - READY
 
-Success (200):
+- [ ] Upload image of printed math problem → OCR extracts correctly
+- [ ] Confirm extracted text → Message sent and AI responds
+- [ ] Upload blurry image → Error shown with retry option
+- [ ] Choose "Type Manually" → Can type problem and send
+- [ ] Edit extracted text → Modified text sent to AI
+- [ ] Re-upload image → Can select and process new image
+- [ ] Refresh page → Images and extracted text persist in Firestore
+- [ ] Test with handwritten problem → OCR interpretation works
+- [ ] Test with non-math image → Error message shown
+- [ ] Mobile camera upload → Works with OCR flow
+- [ ] Multiple messages in conversation → Each properly saved
+- [ ] Confidence levels display correctly → High/Medium/Low badges show
 
-```json
-{
-  "success": true,
-  "extractedText": "Solve 2x + 5 = 13",
-  "confidence": "high|medium|low",
-  "timestamp": "2025-11-04T...",
-  "notes": "Review extraction carefully; some parts may need clarification" // optional
-}
-```
+### Next: Task 2.4 - Image Message Display
 
-Error Examples:
-
-```json
-// Unclear image (422)
-{ "error": "Image too blurry or unclear to extract text", "confidence": "low" }
-
-// Not math problem (422)
-{ "error": "Image does not appear to contain a math problem", "confidence": "low" }
-
-// Invalid format (400)
-{ "error": "Invalid image format. Must be a valid data URL." }
-
-// Auth error (401)
-{ "error": "Invalid or expired token" }
-```
-
-### Deployment Notes
-
-- Function requires OPENAI_API_KEY environment variable set
-- Uses gpt-4o-mini model (cost-efficient Vision API access)
-- Max tokens: 300 (sufficient for problem text extraction)
-- Estimated cost: ~$0.001 per image (~$1 per 1,000 images)
-- OCR history stored in Firestore (minimal storage: ~500 bytes per extraction)
-- Ready for production deployment via: `firebase deploy --only functions:ocr`
-
-### Frontend Integration Ready
-
-- API endpoint: `/ocr` (Cloud Function URL)
-- Environment variable: VITE_OCR_API_URL (auto-derived from VITE_CHAT_API_URL)
-- Function: `callOCRAPI(imageDataURL, conversationId)`
-- Returns: Promise with extractedText, confidence, timestamp
-
-### Testing Strategy
-
-Next steps (Task 2.3):
-
-1. Create OCR confirmation component in frontend
-2. Integrate image upload flow with OCR processing
-3. Test with sample images (printed, handwritten, whiteboard)
-4. Implement confirmation/edit UI before sending to chat
-
-## Files Structure - Updated (Task 2.2)
-
-### Backend (Task 2.2 Complete)
-
-```
-functions/
-├── src/
-│   ├── api/
-│   │   ├── chat.js          (✅ EXISTING - Chat endpoint)
-│   │   └── ocr.js           (✅ CREATED - OCR endpoint, 195 lines)
-│   └── utils/
-│       ├── openai.js        (✅ ENHANCED - Added extractTextFromImage)
-│       └── prompts.js       (✅ ENHANCED - Added OCR_EXTRACTION_PROMPT)
-├── index.js                 (✅ UPDATED - Added OCR export)
-└── package.json
-```
-
-### Frontend (Task 2.1 Complete + Task 2.2 Integration)
-
-```
-frontend/
-├── src/
-│   ├── services/
-│   │   ├── api.js           (✅ ENHANCED - Added callOCRAPI)
-│   │   ├── auth.js
-│   │   ├── firebase.js
-│   │   └── firestore.js
-│   ├── components/
-│   │   └── chat/
-│   │       ├── ImageUpload.jsx       (✅ EXISTING - File/drag-drop)
-│   │       ├── InputArea.jsx         (✅ EXISTING - Image integration)
-│   │       ├── MessageBubble.jsx     (✅ EXISTING - Image rendering)
-│   │       └── MessageList.jsx       (✅ EXISTING - Type/caption support)
-│   └── utils/
-│       └── imageCompression.js       (✅ EXISTING - Compression)
-└── .env.local
-```
-
-## MVP Completion Criteria - Progress Update
-
-- ✅ Vite + React with Tailwind
-- ✅ Firebase emulators configured
-- ✅ Auth system working (email/password, Google OAuth)
-- ✅ User profiles in Firestore
-- ✅ Protected routes functional
-- ✅ Auth state persistent
-- ✅ Form validation with error messages
-- ✅ Modern UI/UX with dark theme
-- ✅ Chat UI built with all components
-- ✅ Socratic backend implemented and deployed
-- ✅ Frontend-Backend connection (Task 1.5)
-- ✅ Math equations render with KaTeX (Task 1.6)
-- ✅ Messages save to Firestore (Task 1.7)
-- ✅ Image upload UI (Task 2.1)
-- ✅ OCR backend endpoint (Task 2.2)
-- ⏳ OCR frontend integration & confirmation UI (Task 2.3)
-
-## Next: Task 2.3 - OCR Integration & Confirmation Flow
-
-- Create OCR confirmation component
-- Integrate with image upload flow
-- Test with diverse image types
-- Implement edit/re-upload options
+- Polish image message display in chat history
+- Implement image modal for viewing full size
+- Add lazy loading for image messages
+- Test image persistence across sessions
