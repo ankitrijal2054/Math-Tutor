@@ -12,6 +12,7 @@ const logger = require("firebase-functions/logger");
 
 // Import API endpoints
 const { chat } = require("./src/api/chat");
+const { ocr } = require("./src/api/ocr");
 
 // For cost control, you can set the maximum number of containers that can be
 // running at the same time. This helps mitigate the impact of unexpected
@@ -27,3 +28,4 @@ setGlobalOptions({ maxInstances: 10 });
 
 // Export Cloud Functions
 exports.chat = chat;
+exports.ocr = ocr;

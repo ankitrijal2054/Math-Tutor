@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 Next (OCR Backend)
+**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 Next
 
 ## Completed Tasks
 
@@ -14,119 +14,201 @@
 - ✅ **Task 1.6:** Math Rendering with KaTeX - COMPLETE ✅
 - ✅ **Task 1.7:** Conversation Persistence - COMPLETE ✅
 - ✅ **Task 2.1:** Image Upload UI - COMPLETE ✅
+- ✅ **Task 2.2:** OCR Backend Processing - COMPLETE ✅
 
-## Task 2.1 - Image Upload UI - COMPLETE ✅
+## Task 2.2 - OCR Backend Processing - COMPLETE ✅
 
-**Status:** ✅ ALL SUBTASKS COMPLETE
+**Status:** ✅ ALL SUBTASKS COMPLETE - Ready for Deployment and Frontend Integration
 
-**Files Created:**
+### Backend Files Created/Updated
 
-1. **src/components/chat/ImageUpload.jsx** - Image upload component (140 lines)
+1. **functions/src/api/ocr.js** - NEW OCR Cloud Function (195 lines)
 
-   - File input with accept="image/\*" for all image types
-   - File validation (type: jpg, png, heic, webp; size: max 5MB)
-   - Image preview display (150x150px) with remove button
-   - Drag-and-drop preparation (handlers ready, state tracking)
-   - Loading indicator during compression
-   - Error handling with toast notifications
+   - POST /ocr endpoint with CORS configuration
+   - Firebase ID token authentication and verification
+   - Request validation (imageDataURL, conversationId, format checking)
+   - OpenAI Vision API integration with extractTextFromImage()
+   - Text normalization (trim, deduplicate newlines, clean whitespace)
+   - Confidence level determination (high/medium/low based on extraction quality)
+   - Special marker detection ([IMAGE_TOO_UNCLEAR], [NOT_A_MATH_PROBLEM])
+   - OCR history storage to Firestore (ocrHistory subcollection)
+   - Comprehensive error handling with appropriate HTTP status codes
+   - Response format: { success, extractedText, confidence, timestamp, notes }
 
-2. **src/utils/imageCompression.js** - Image compression utility (150+ lines)
-   - `compressImage(file, options)` - Resize and compress images to JPEG
-   - Max dimensions: 1024x1024px, maintains aspect ratio
-   - Quality: 0.8 JPEG compression
-   - Returns compressed image as base64 data URL
-   - `dataURLToFile()` - Convert base64 back to File object
-   - `getImageDimensions()` - Get image width/height
+2. **functions/src/utils/openai.js** - ENHANCED
 
-**Files Updated:**
+   - Added `extractTextFromImage(imageDataURL, prompt, options)` function
+   - Vision API integration using gpt-4o-mini model
+   - Support for base64 data URLs (data:image/jpeg;base64,...)
+   - Exponential backoff retry logic (3 retries with jitter)
+   - Error handling for rate limits, network issues, API failures
+   - Configurable max_tokens (default 300 for image text extraction)
 
-1. **src/components/chat/InputArea.jsx** - Enhanced with image support (150 lines)
+3. **functions/src/utils/prompts.js** - ENHANCED
 
-   - Integrated ImageUpload component
-   - Image preview display with filename and caption textarea
-   - Drag-and-drop overlay for entire input area
-   - Drag feedback visual indication ("Drop image here")
-   - Image compression on selection
-   - Send button handles both text and image messages
-   - Support for optional captions with images
-   - Loading states during compression
+   - Added `OCR_EXTRACTION_PROMPT` constant
+   - Instructions for accurate math problem extraction
+   - LaTeX formatting preservation ($...$ and $$...$$)
+   - Handwriting interpretation guidelines
+   - Irrelevant content filtering (headers, page numbers, stray marks)
+   - Multi-part problem handling
+   - Special output markers for edge cases
 
-2. **src/contexts/ChatContext.jsx** - Updated for multi-type messages (120 lines)
+4. **functions/index.js** - UPDATED
+   - Added OCR function import and export
+   - OCR function now available as Cloud Function endpoint
 
-   - `sendMessage()` now accepts object format: `{type, content, caption}`
-   - Backward compatible with string format (legacy)
-   - Handles image message type: sends "[Image uploaded]" + caption to API
-   - Stores message type in state (type: "text" | "image")
-   - Caption stored separately for image messages
+### Frontend Enhancement
 
-3. **src/components/chat/MessageBubble.jsx** - Image message rendering (160 lines)
+1. **frontend/src/services/api.js** - ENHANCED
+   - Added `callOCRAPI(imageDataURL, conversationId)` function
+   - Firebase authentication via ID token
+   - Endpoint auto-detection (VITE_OCR_API_URL or derived from VITE_CHAT_API_URL)
+   - Request validation and error handling
+   - Response parsing with extractedText, confidence, notes
+   - Comprehensive error messages for debugging
 
-   - Renders image messages differently from text
-   - Image thumbnail (40x40px) with hover effect ("View Full")
-   - Click to open full-size modal
-   - Full-size image modal with backdrop
-   - Optional caption display below/inside modal
-   - Backward compatible with text-only messages
+### Features Implemented
 
-4. **src/components/chat/MessageList.jsx** - Message type support
-   - Passes `type` and `caption` props to MessageBubble
-   - Default type="text" for backward compatibility
+✅ Authentication & Security:
 
-**Key Features Implemented:**
+- Firebase ID token verification required
+- User ID validation
+- Secure endpoint access control
 
-- ✅ Camera/upload button opens file picker
-- ✅ Drag-and-drop support for images to input area
-- ✅ Image preview before sending (24x24px in input, 40x40px in chat)
-- ✅ Images compress to reasonable size (max 1024x1024, JPEG 0.8)
-- ✅ Uploaded images appear in chat with proper styling
-- ✅ Loading states show during compression
-- ✅ Error handling for invalid file types and sizes
-- ✅ Works with mobile browsers (camera upload via file input)
-- ✅ Full-size image modal for viewing
-- ✅ Optional captions for images
-- ✅ No Firebase Storage integration yet (storing as base64 in Firestore for now)
-- ✅ Build successful, no linting errors
+✅ Image Processing:
 
-**Technical Implementation:**
+- Base64 data URL validation
+- Format verification (data:image/...)
+- Support for all image types (jpg, png, heic, webp, etc.)
 
-- Canvas API for client-side image compression
-- FileReader API for file handling
-- Drag-and-drop with proper event handling
-- Image preview using data URLs
-- Modal using React state + fixed positioning
-- Toast notifications for user feedback
-- Backward compatible message format
+✅ Vision API Integration:
 
-## In Progress
+- OpenAI GPT-4o-mini Vision capabilities
+- Exponential backoff retry (3 attempts with jitter)
+- Rate limit handling (429, 500, 502, 503 errors)
+- Network resilience (connection reset, timeout)
 
-Task 2.2 Ready - OCR Backend Processing
+✅ Text Extraction & Normalization:
 
-## Next Tasks
+- LaTeX preservation ($x^2 + 5 = 13$ format)
+- Whitespace normalization
+- Multiple newline deduplication
+- Empty result detection
+- Special marker identification
 
-- **Task 2.2:** OCR Backend Processing
-  - Extract math problem text from uploaded images using OpenAI Vision API
-  - Create `functions/src/api/ocr.js` endpoint
-  - Store extracted text in Firestore
-  - Return text to frontend for AI response
+✅ Confidence Scoring:
 
-## Files Structure - Updated (Task 2.1)
+- High: Multi-line extractions without ambiguity
+- Medium: Standard extractions, single line or short problems
+- Low: Short extractions, ambiguous content, unclear images
 
-### Frontend (Task 2.1 Complete)
+✅ Error Handling:
+
+- Image too blurry/unclear (status 422)
+- Not a math problem (status 422)
+- Invalid image format (status 400)
+- Missing required fields (status 400)
+- Authentication failures (status 401)
+- API failures with retry (status 500)
+- Non-critical: OCR history logging failure (warning only)
+
+✅ Data Storage:
+
+- OCR history saved to Firestore (conversations/{id}/ocrHistory)
+- Stores: originalText, normalizedText, confidence, timestamp, uid
+- Non-blocking: doesn't fail the request if storage fails
+
+### Response Format
+
+Success (200):
+
+```json
+{
+  "success": true,
+  "extractedText": "Solve 2x + 5 = 13",
+  "confidence": "high|medium|low",
+  "timestamp": "2025-11-04T...",
+  "notes": "Review extraction carefully; some parts may need clarification" // optional
+}
+```
+
+Error Examples:
+
+```json
+// Unclear image (422)
+{ "error": "Image too blurry or unclear to extract text", "confidence": "low" }
+
+// Not math problem (422)
+{ "error": "Image does not appear to contain a math problem", "confidence": "low" }
+
+// Invalid format (400)
+{ "error": "Invalid image format. Must be a valid data URL." }
+
+// Auth error (401)
+{ "error": "Invalid or expired token" }
+```
+
+### Deployment Notes
+
+- Function requires OPENAI_API_KEY environment variable set
+- Uses gpt-4o-mini model (cost-efficient Vision API access)
+- Max tokens: 300 (sufficient for problem text extraction)
+- Estimated cost: ~$0.001 per image (~$1 per 1,000 images)
+- OCR history stored in Firestore (minimal storage: ~500 bytes per extraction)
+- Ready for production deployment via: `firebase deploy --only functions:ocr`
+
+### Frontend Integration Ready
+
+- API endpoint: `/ocr` (Cloud Function URL)
+- Environment variable: VITE_OCR_API_URL (auto-derived from VITE_CHAT_API_URL)
+- Function: `callOCRAPI(imageDataURL, conversationId)`
+- Returns: Promise with extractedText, confidence, timestamp
+
+### Testing Strategy
+
+Next steps (Task 2.3):
+
+1. Create OCR confirmation component in frontend
+2. Integrate image upload flow with OCR processing
+3. Test with sample images (printed, handwritten, whiteboard)
+4. Implement confirmation/edit UI before sending to chat
+
+## Files Structure - Updated (Task 2.2)
+
+### Backend (Task 2.2 Complete)
+
+```
+functions/
+├── src/
+│   ├── api/
+│   │   ├── chat.js          (✅ EXISTING - Chat endpoint)
+│   │   └── ocr.js           (✅ CREATED - OCR endpoint, 195 lines)
+│   └── utils/
+│       ├── openai.js        (✅ ENHANCED - Added extractTextFromImage)
+│       └── prompts.js       (✅ ENHANCED - Added OCR_EXTRACTION_PROMPT)
+├── index.js                 (✅ UPDATED - Added OCR export)
+└── package.json
+```
+
+### Frontend (Task 2.1 Complete + Task 2.2 Integration)
 
 ```
 frontend/
 ├── src/
-│   ├── utils/
-│   │   └── imageCompression.js   (✅ CREATED - Image compression)
+│   ├── services/
+│   │   ├── api.js           (✅ ENHANCED - Added callOCRAPI)
+│   │   ├── auth.js
+│   │   ├── firebase.js
+│   │   └── firestore.js
 │   ├── components/
 │   │   └── chat/
-│   │       ├── ImageUpload.jsx   (✅ CREATED - File/drag-drop handling)
-│   │       ├── InputArea.jsx     (✅ UPDATED - Image integration)
-│   │       ├── MessageBubble.jsx (✅ UPDATED - Image rendering)
-│   │       └── MessageList.jsx   (✅ UPDATED - Type/caption props)
-│   ├── contexts/
-│   │   └── ChatContext.jsx       (✅ UPDATED - Multi-type messages)
-│   └── main.jsx
+│   │       ├── ImageUpload.jsx       (✅ EXISTING - File/drag-drop)
+│   │       ├── InputArea.jsx         (✅ EXISTING - Image integration)
+│   │       ├── MessageBubble.jsx     (✅ EXISTING - Image rendering)
+│   │       └── MessageList.jsx       (✅ EXISTING - Type/caption support)
+│   └── utils/
+│       └── imageCompression.js       (✅ EXISTING - Compression)
 └── .env.local
 ```
 
@@ -146,8 +228,12 @@ frontend/
 - ✅ Math equations render with KaTeX (Task 1.6)
 - ✅ Messages save to Firestore (Task 1.7)
 - ✅ Image upload UI (Task 2.1)
-- ⏳ OCR text extraction (Task 2.2)
+- ✅ OCR backend endpoint (Task 2.2)
+- ⏳ OCR frontend integration & confirmation UI (Task 2.3)
 
-## Ready for Task 2.2 ✅
+## Next: Task 2.3 - OCR Integration & Confirmation Flow
 
-Image upload UI fully implemented with preview, compression, and modal viewing. Ready to add OCR backend processing for extracting text from images.
+- Create OCR confirmation component
+- Integrate with image upload flow
+- Test with diverse image types
+- Implement edit/re-upload options
