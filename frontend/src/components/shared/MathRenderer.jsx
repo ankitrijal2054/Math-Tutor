@@ -17,27 +17,23 @@ const MathRenderer = ({ content }) => {
       {segments.map((segment, index) => {
         if (segment.type === "text") {
           return (
-            <span key={index} className="inline whitespace-normal break-words">
+            <span key={index} className="inline">
               {segment.value}
             </span>
           );
         } else if (segment.type === "inline-math") {
           return (
-            <span key={index} className="inline-block max-w-full">
-              <div className="overflow-hidden">
-                <InlineMath math={segment.value} />
-              </div>
+            <span key={index} className="inline">
+              <InlineMath math={segment.value} />
             </span>
           );
         } else if (segment.type === "block-math") {
           return (
             <div
               key={index}
-              className="my-3 p-2 rounded-lg bg-slate-700 bg-opacity-20 w-full flex justify-center overflow-hidden"
+              className="flex justify-center my-3 p-2 rounded-lg bg-slate-700 bg-opacity-20"
             >
-              <div className="max-w-full overflow-hidden">
-                <BlockMath math={segment.value} />
-              </div>
+              <BlockMath math={segment.value} />
             </div>
           );
         }
@@ -57,7 +53,7 @@ function parseContent(content) {
 
   // Regex to find block math ($$...$$) and inline math ($...$)
   // We need to prioritize block math ($$ patterns) over inline math
-  const regex = /(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$)/g;
+  const regex = /(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g;
 
   let match;
   while ((match = regex.exec(content)) !== null) {
