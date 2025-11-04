@@ -82,31 +82,31 @@ const WhiteboardModal = ({ onSend }) => {
 
       {/* Modal - Only covers chat section, not sidebar */}
       <div
-        className={`fixed bottom-0 right-0 bg-white rounded-t-2xl shadow-2xl transition-all duration-300 z-50 flex flex-col md:left-[250px] left-0`}
+        className={`fixed bottom-0 right-0 bg-slate-900 rounded-t-2xl shadow-2xl transition-all duration-300 z-50 flex flex-col md:left-[250px] left-0`}
         style={{
           height: "60vh",
           transform: isWhiteboardOpen ? "translateY(0)" : "translateY(100%)",
         }}
       >
         {/* Header - Compact */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700 bg-slate-800">
           <button
             onClick={closeWhiteboard}
-            className="p-1 hover:bg-slate-100 rounded-lg transition-colors duration-200"
-            title="Close whiteboard"
+            className="p-1 hover:bg-slate-700 rounded-lg transition-colors duration-200"
+            title="Close canvas"
           >
-            <X className="w-4 h-4 text-slate-700" />
+            <X className="w-4 h-4 text-slate-200" />
           </button>
-          <h3 className="text-xs font-semibold text-slate-700">Whiteboard</h3>
+          <h3 className="text-xs font-semibold text-slate-100">Canvas</h3>
           <div className="w-6" /> {/* Spacer for alignment */}
         </div>
 
         {/* Canvas Area - Maximized with Floating Toolbar */}
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden relative bg-slate-900">
           <WhiteboardCanvas height="100%" />
 
           {/* Floating Toolbar - Overlays Canvas */}
-          <div className="absolute top-3 left-3 z-40 flex gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-slate-200">
+          <div className="absolute top-3 left-3 z-40 flex gap-1 bg-slate-800/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-slate-700">
             {toolButtons.map((tool) => {
               const Icon = tool.icon;
               const isActive = selectedTool === tool.id;
@@ -117,7 +117,7 @@ const WhiteboardModal = ({ onSend }) => {
                   className={`p-2 rounded-lg transition-all duration-200 ${
                     isActive
                       ? "bg-indigo-500 text-white shadow-md scale-110"
-                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                      : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                   }`}
                   title={tool.label}
                 >
@@ -129,11 +129,11 @@ const WhiteboardModal = ({ onSend }) => {
                 </button>
               );
             })}
-            <div className="w-px bg-slate-300 mx-1" /> {/* Divider */}
+            <div className="w-px bg-slate-600 mx-1" /> {/* Divider */}
             <button
               onClick={() => undo()}
               disabled={drawingHistory.length === 0}
-              className="p-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="p-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               title="Undo (Ctrl+Z)"
             >
               <Undo2 className="w-3.5 h-3.5" />
@@ -141,7 +141,7 @@ const WhiteboardModal = ({ onSend }) => {
             <button
               onClick={() => redo()}
               disabled={redoHistory.length === 0}
-              className="p-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="p-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               title="Redo (Ctrl+Shift+Z)"
             >
               <Redo2 className="w-3.5 h-3.5" />
@@ -150,10 +150,10 @@ const WhiteboardModal = ({ onSend }) => {
         </div>
 
         {/* Footer - Compact Single Row */}
-        <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-slate-200 bg-slate-50">
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-slate-700 bg-slate-800">
           <button
             onClick={handleClear}
-            className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-all duration-200 flex-shrink-0"
+            className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all duration-200 flex-shrink-0"
             title="Clear canvas"
           >
             <Trash2 className="w-4 h-4" />
@@ -165,7 +165,7 @@ const WhiteboardModal = ({ onSend }) => {
             onChange={(e) => setCaptionText(e.target.value)}
             placeholder="Caption"
             maxLength={100}
-            className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all duration-200"
+            className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all duration-200"
           />
 
           <button
