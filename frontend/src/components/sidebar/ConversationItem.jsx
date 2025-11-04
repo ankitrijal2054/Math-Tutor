@@ -55,7 +55,7 @@ const ConversationItem = ({
   return (
     <>
       <div
-        className={`group relative rounded-lg transition-all duration-200 ${
+        className={`group relative rounded-lg transition-all duration-200 flex items-center gap-0 ${
           isActive
             ? "bg-indigo-600/20 border border-indigo-500/50 shadow-lg shadow-indigo-500/10"
             : "hover:bg-slate-700/50 hover:shadow-md"
@@ -63,39 +63,38 @@ const ConversationItem = ({
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
+        {/* Main clickable area for conversation selection */}
         <button
           onClick={handleSelect}
-          className="w-full text-left px-3 py-2.5 rounded-lg transition-colors duration-150"
+          className="flex-1 text-left px-3 py-2.5 rounded-lg transition-colors duration-150"
           title={conversation.title}
         >
           {/* Conversation Title */}
-          <div className="flex items-start justify-between gap-2 min-w-0">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-100 truncate">
-                {conversation.title}
-              </p>
-              {/* Relative Time */}
-              <p className="text-xs text-slate-400 mt-0.5">
-                {formatRelativeTime(conversation.updatedAt)}
-              </p>
-            </div>
-
-            {/* Delete Button - Show on hover or active */}
-            {(isHovering || isActive) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteModal(true);
-                }}
-                disabled={isDeleting}
-                className="flex-shrink-0 p-1.5 rounded hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Delete conversation"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-100 truncate">
+              {conversation.title}
+            </p>
+            {/* Relative Time */}
+            <p className="text-xs text-slate-400 mt-0.5">
+              {formatRelativeTime(conversation.updatedAt)}
+            </p>
           </div>
         </button>
+
+        {/* Delete Button - Show on hover or active (OUTSIDE main button) */}
+        {(isHovering || isActive) && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteModal(true);
+            }}
+            disabled={isDeleting}
+            className="flex-shrink-0 p-1.5 rounded hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Delete conversation"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
 
         {/* Active Indicator - Left border */}
         {isActive && (
