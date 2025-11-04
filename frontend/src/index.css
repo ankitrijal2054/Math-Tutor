@@ -44,4 +44,43 @@
     scrollbar-color: #64748b transparent;
     scrollbar-width: thin;
   }
+
+  /* KaTeX Overflow Prevention */
+  /* Constrain KaTeX elements to prevent horizontal overflow */
+  .katex {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.95em;
+  }
+
+  .katex-display {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.95em;
+    margin: 0.25em 0;
+  }
+
+  .katex-html {
+    max-width: 100%;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .katex-mathml {
+    display: none;
+  }
+
+  /* Prevent default KaTeX container from expanding */
+  .katex-container {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Ensure equation wrapper doesn't add extra space */
+  span.katex,
+  div.katex {
+    margin: 0;
+    padding: 0;
+  }
 }

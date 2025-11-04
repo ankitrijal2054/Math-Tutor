@@ -13,27 +13,31 @@ const MathRenderer = ({ content }) => {
   const segments = parseContent(content);
 
   return (
-    <div className="break-words">
+    <div className="w-full">
       {segments.map((segment, index) => {
         if (segment.type === "text") {
           return (
-            <span key={index} className="inline">
+            <span key={index} className="inline whitespace-normal break-words">
               {segment.value}
             </span>
           );
         } else if (segment.type === "inline-math") {
           return (
-            <span key={index} className="inline">
-              <InlineMath math={segment.value} />
+            <span key={index} className="inline-block max-w-full">
+              <div className="overflow-hidden">
+                <InlineMath math={segment.value} />
+              </div>
             </span>
           );
         } else if (segment.type === "block-math") {
           return (
             <div
               key={index}
-              className="flex justify-center my-3 p-2 rounded-lg bg-slate-700 bg-opacity-20"
+              className="my-3 p-2 rounded-lg bg-slate-700 bg-opacity-20 w-full flex justify-center overflow-hidden"
             >
-              <BlockMath math={segment.value} />
+              <div className="max-w-full overflow-hidden">
+                <BlockMath math={segment.value} />
+              </div>
             </div>
           );
         }

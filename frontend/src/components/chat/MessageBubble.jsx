@@ -139,7 +139,7 @@ const MessageBubble = ({
                   : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
               }`}
             >
-              <div className="text-sm leading-relaxed">
+              <div className="text-sm leading-relaxed overflow-hidden">
                 <MathRenderer content={content} />
               </div>
             </div>
