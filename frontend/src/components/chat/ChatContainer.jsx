@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MessageList from "./MessageList";
 import InputArea from "./InputArea";
 import TypingIndicator from "./TypingIndicator";
@@ -7,7 +7,7 @@ import OCRError from "./OCRError";
 import WhiteboardModal from "../whiteboard/WhiteboardModal";
 import { useChatContext } from "../../contexts/ChatContext";
 
-const ChatContainer = () => {
+const ChatContainer = ({ sidebarRef }) => {
   const {
     messages,
     isLoading,
@@ -17,9 +17,17 @@ const ChatContainer = () => {
     clearOCRState,
     sendConfirmedOCRText,
     processImageWithOCR,
+    conversationId,
   } = useChatContext();
 
   const [showTypeManually, setShowTypeManually] = useState(false);
+
+  // Refetch conversations when a new conversation is created
+  useEffect(() => {
+    if (conversationId && sidebarRef?.current) {
+      sidebarRef.current.refetchConversations();
+    }
+  }, [conversationId, sidebarRef]);
 
   // Handle sending a message
   const handleSend = (userMessage) => {

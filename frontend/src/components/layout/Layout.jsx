@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Header from "./Header";
 import Sidebar from "../sidebar/Sidebar";
 
 const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const sidebarRef = useRef(null);
 
   return (
     <div className="h-screen flex flex-col bg-slate-900">
@@ -17,12 +18,15 @@ const Layout = ({ children }) => {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar with Conversations */}
         <Sidebar
+          ref={sidebarRef}
           isMobileOpen={isSidebarOpen}
           onMobileClose={() => setIsSidebarOpen(false)}
         />
 
         {/* Chat Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {React.cloneElement(children, { sidebarRef })}
+        </main>
 
         {/* Whiteboard Placeholder - Hidden for now */}
         {/* 
