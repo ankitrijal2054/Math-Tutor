@@ -21,6 +21,7 @@ const WhiteboardModal = ({ onSend }) => {
   } = useWhiteboard();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   if (!isWhiteboardOpen) return null;
 
@@ -35,29 +36,38 @@ const WhiteboardModal = ({ onSend }) => {
   };
 
   const handleSend = async () => {
-    if (!canvasRef || !canvasRef.current) {
-      toast.error("No canvas to save");
+    if (!canvasRef) {
+      toast.error("Canvas not ready");
+      return;
+    }
+
+    if (drawingHistory.length === 0) {
+      toast.error("Please draw something first");
       return;
     }
 
     try {
-      // Convert canvas to image
-      const imageDataURL = canvasRef.current.toDataURL("image/png");
+      setIsSending(true);
 
-      // Send via parent callback
+      // Convert canvas to image data URL
+      const imageDataURL = canvasRef.toDataURL("image/png");
+
+      // Send via parent callback with whiteboard type
       onSend({
         type: "whiteboard",
         content: imageDataURL,
         caption: captionText.trim() || "",
       });
 
-      // Close modal and reset
+      // Close modal and reset after successful send
       closeWhiteboard();
       clearWhiteboard();
       toast.success("Drawing sent!");
     } catch (error) {
       console.error("Failed to send whiteboard:", error);
-      toast.error("Failed to send drawing");
+      toast.error("Failed to send drawing. Please try again.");
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -94,6 +104,7 @@ const WhiteboardModal = ({ onSend }) => {
             onClick={closeWhiteboard}
             className="p-1 hover:bg-slate-700 rounded-lg transition-colors duration-200"
             title="Close canvas"
+            disabled={isSending}
           >
             <X className="w-4 h-4 text-slate-200" />
           </button>
@@ -114,11 +125,12 @@ const WhiteboardModal = ({ onSend }) => {
                 <button
                   key={tool.id}
                   onClick={() => setSelectedTool(tool.id)}
+                  disabled={isSending}
                   className={`p-2 rounded-lg transition-all duration-200 ${
                     isActive
                       ? "bg-indigo-500 text-white shadow-md scale-110"
                       : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                  }`}
+                  } ${isSending ? "opacity-50 cursor-not-allowed" : ""}`}
                   title={tool.label}
                 >
                   {Icon ? (
@@ -132,7 +144,7 @@ const WhiteboardModal = ({ onSend }) => {
             <div className="w-px bg-slate-600 mx-1" /> {/* Divider */}
             <button
               onClick={() => undo()}
-              disabled={drawingHistory.length === 0}
+              disabled={drawingHistory.length === 0 || isSending}
               className="p-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               title="Undo (Ctrl+Z)"
             >
@@ -140,7 +152,7 @@ const WhiteboardModal = ({ onSend }) => {
             </button>
             <button
               onClick={() => redo()}
-              disabled={redoHistory.length === 0}
+              disabled={redoHistory.length === 0 || isSending}
               className="p-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               title="Redo (Ctrl+Shift+Z)"
             >
@@ -153,7 +165,8 @@ const WhiteboardModal = ({ onSend }) => {
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-slate-700 bg-slate-800">
           <button
             onClick={handleClear}
-            className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all duration-200 flex-shrink-0"
+            disabled={drawingHistory.length === 0 || isSending}
+            className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0"
             title="Clear canvas"
           >
             <Trash2 className="w-4 h-4" />
@@ -163,18 +176,23 @@ const WhiteboardModal = ({ onSend }) => {
             type="text"
             value={captionText}
             onChange={(e) => setCaptionText(e.target.value)}
-            placeholder="Caption"
+            placeholder="Caption (optional)"
             maxLength={100}
-            className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all duration-200"
+            disabled={isSending}
+            className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-slate-700 border border-slate-600 text-slate-100 placeholder-slate-400 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           />
 
           <button
             onClick={handleSend}
-            disabled={drawingHistory.length === 0}
-            className="p-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
-            title="Send drawing"
+            disabled={drawingHistory.length === 0 || isSending}
+            className="p-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
+            title={isSending ? "Sending..." : "Send drawing"}
           >
-            <Send className="w-4 h-4" />
+            {isSending ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
