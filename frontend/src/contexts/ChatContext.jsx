@@ -214,13 +214,28 @@ export const ChatProvider = ({ children }) => {
       try {
         setError(null);
 
-        // Optimistic update - add user message immediately
+        // Build additional data - only include caption if it has a value
+        const additionalData = {};
+        if (messageCaption) {
+          additionalData.caption = messageCaption;
+        }
+
+        // Save user message to Firestore FIRST (before API call)
+        const userMessageId = await saveMessage(
+          conversationId,
+          "user",
+          messageContent,
+          messageType,
+          additionalData
+        );
+
+        // Create user message object with REAL Firestore ID
         const userMessageObj = {
-          id: `msg_${Date.now()}`,
+          id: userMessageId,
           role: "user",
           type: messageType,
           content: messageContent,
-          caption: messageCaption || undefined,
+          ...(messageCaption && { caption: messageCaption }),
           timestamp: new Date().toISOString(),
         };
 
@@ -242,7 +257,7 @@ export const ChatProvider = ({ children }) => {
           throw new Error(response.error || "Failed to get response");
         }
 
-        // Add AI response to messages
+        // Add AI response to messages (backend already saved it)
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
@@ -274,10 +289,8 @@ export const ChatProvider = ({ children }) => {
         // Show error toast
         toast.error(err.message || "Failed to send message. Please try again.");
 
-        // Remove the optimistic user message on error
-        setMessages((prev) =>
-          prev.filter((msg) => msg.id !== `msg_${Date.now()}`)
-        );
+        // Remove the user message on error (it was already saved but failed to get response)
+        setMessages((prev) => prev.slice(0, -1));
       }
     },
     [conversationId, messages.length, processImageWithOCR]
