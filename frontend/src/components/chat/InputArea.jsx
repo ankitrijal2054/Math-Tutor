@@ -174,7 +174,23 @@ const InputArea = ({ onSend, disabled = false }) => {
       )}
 
       {/* Input Row */}
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-center">
+        {/* Left Actions - Upload and Whiteboard */}
+        <div className="flex gap-2 flex-shrink-0">
+          <ImageUpload
+            onImageSelect={handleImageSelect}
+            disabled={disabled || isCompressing}
+          />
+          <button
+            onClick={openWhiteboard}
+            disabled={disabled}
+            title="Open whiteboard"
+            className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
+          >
+            <Zap className="w-5 h-5" />
+          </button>
+        </div>
+
         {/* Text Input */}
         <div className="flex-1 relative">
           <textarea
@@ -193,37 +209,23 @@ const InputArea = ({ onSend, disabled = false }) => {
           />
         </div>
 
-        {/* Send Button */}
-        <button
-          onClick={handleSend}
-          disabled={isSendDisabled}
-          className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
-        >
-          <Send className="w-5 h-5 text-white" />
-        </button>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-2 justify-end">
-        <ImageUpload
-          onImageSelect={handleImageSelect}
-          disabled={disabled || isCompressing}
-        />
-        <button
-          onClick={openWhiteboard}
-          disabled={disabled}
-          title="Open whiteboard"
-          className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
-        >
-          <Zap className="w-5 h-5" />
-        </button>
-        <button
-          disabled
-          title="Voice coming soon"
-          className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
-        >
-          <Mic className="w-5 h-5" />
-        </button>
+        {/* Right Actions - Voice and Send */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            disabled
+            title="Voice coming soon"
+            className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={isSendDisabled}
+            className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
+          >
+            <Send className="w-5 h-5 text-white" />
+          </button>
+        </div>
       </div>
     </div>
   );
