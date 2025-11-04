@@ -13,6 +13,7 @@ const MessageBubble = ({
 }) => {
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const { user } = useAuth();
 
   const isUser = role === "user";
@@ -68,11 +69,21 @@ const MessageBubble = ({
               className="relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 p-1"
               onClick={() => setShowImageModal(true)}
             >
-              <img
-                src={content}
-                alt="User uploaded"
-                className="h-40 w-40 object-cover rounded-xl group-hover:opacity-80 transition-opacity"
-              />
+              {imageLoadError ? (
+                <div className="h-40 w-40 bg-slate-600 rounded-xl flex flex-col items-center justify-center text-center p-4">
+                  <div className="text-white text-sm">Image unavailable</div>
+                  <div className="text-xs text-slate-300 mt-1">
+                    {caption || "Math problem image"}
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={content}
+                  alt="User uploaded"
+                  className="h-40 w-40 object-cover rounded-xl group-hover:opacity-80 transition-opacity"
+                  onError={() => setImageLoadError(true)}
+                />
+              )}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors rounded-2xl">
                 <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100">
                   View Full
@@ -158,11 +169,21 @@ const MessageBubble = ({
             >
               <X className="w-5 h-5" />
             </button>
-            <img
-              src={content}
-              alt="Full size"
-              className="w-full h-full object-contain"
-            />
+            {imageLoadError ? (
+              <div className="w-full h-[80vh] bg-slate-800 flex flex-col items-center justify-center">
+                <div className="text-white text-lg">Image unavailable</div>
+                <div className="text-slate-400 mt-2">
+                  {caption || "This image could not be loaded"}
+                </div>
+              </div>
+            ) : (
+              <img
+                src={content}
+                alt="Full size"
+                className="w-full h-full object-contain"
+                onError={() => setImageLoadError(true)}
+              />
+            )}
             {(caption || extractedText) && (
               <div className="bg-slate-800 text-white p-3 text-sm space-y-2">
                 {caption && (

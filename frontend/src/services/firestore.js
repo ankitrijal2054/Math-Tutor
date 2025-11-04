@@ -12,7 +12,14 @@ import {
   serverTimestamp,
   writeBatch,
 } from "firebase/firestore";
-import { db, auth } from "./firebase";
+import {
+  ref,
+  uploadBytes,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import { db, auth, storage } from "./firebase";
 
 /**
  * Generate a title from the first message (max 50 characters)
@@ -294,5 +301,55 @@ export const deleteConversation = async (conversationId) => {
   } catch (error) {
     console.error("Error deleting conversation:", error);
     throw new Error("Failed to delete conversation");
+  }
+};
+
+/**
+ * Upload an image to Firebase Storage and return the download URL
+ * @param {string} dataURL - Base64 data URL of the image
+ * @param {string} conversationId - The conversation ID
+ * @returns {Promise<string>} Download URL of the uploaded image
+ */
+export const uploadImageToStorage = async (dataURL, conversationId) => {
+  if (!auth.currentUser) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    // Convert data URL to blob
+    const response = await fetch(dataURL);
+    const blob = await response.blob();
+
+    // Create a unique filename
+    const timestamp = Date.now();
+    const filename = `${conversationId}/${timestamp}.jpg`;
+    const storageRef = ref(
+      storage,
+      `images/${auth.currentUser.uid}/${filename}`
+    );
+
+    // Upload to Firebase Storage
+    await uploadBytes(storageRef, blob);
+
+    // Get and return the download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  } catch (error) {
+    console.error("Error uploading image to storage:", error);
+    throw new Error("Failed to upload image. Please try again.");
+  }
+};
+
+/**
+ * Delete an image from Firebase Storage
+ * @param {string} imageURL - The Firebase Storage download URL
+ */
+export const deleteImageFromStorage = async (imageURL) => {
+  try {
+    const imageRef = ref(storage, imageURL);
+    await deleteObject(imageRef);
+  } catch (error) {
+    console.error("Error deleting image from storage:", error);
+    // Don't throw - deletion errors shouldn't break the app
   }
 };

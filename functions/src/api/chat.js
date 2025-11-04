@@ -142,11 +142,6 @@ const chat = onRequest(async (req, res) => {
 
       // ========== 6. SAVE MESSAGES TO FIRESTORE ==========
       const timestamp = admin.firestore.FieldValue.serverTimestamp();
-      const userMessageRef = db
-        .collection("conversations")
-        .doc(conversationId)
-        .collection("messages")
-        .doc();
 
       const assistantMessageRef = db
         .collection("conversations")
@@ -155,16 +150,7 @@ const chat = onRequest(async (req, res) => {
         .doc();
 
       try {
-        // Save user message
-        await userMessageRef.set({
-          role: "user",
-          content: message,
-          timestamp,
-          type: "text",
-          userId,
-        });
-
-        // Save assistant message
+        // Save only assistant message (frontend already saved the user message)
         await assistantMessageRef.set({
           role: "assistant",
           content: aiResponse,

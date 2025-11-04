@@ -6,6 +6,8 @@ import {
   loadMessages,
   loadConversationMetadata,
   updateConversation,
+  uploadImageToStorage,
+  saveMessage,
 } from "../services/firestore";
 import toast from "react-hot-toast";
 
@@ -101,12 +103,30 @@ export const ChatProvider = ({ children }) => {
         setError(null);
         setIsLoading(true);
 
-        // Add user message with image and extracted text
+        // Upload image to Firebase Storage to get a URL (not base64)
+        const imageStorageURL = await uploadImageToStorage(
+          imageDataURL,
+          conversationId
+        );
+
+        // Save image message to Firestore and get the message ID
+        const messageId = await saveMessage(
+          conversationId,
+          "user",
+          imageStorageURL,
+          "image",
+          {
+            caption: confirmedText,
+            extractedText: confirmedText,
+          }
+        );
+
+        // Add user message with the real ID from Firestore
         const userMessageObj = {
-          id: `msg_${Date.now()}`,
+          id: messageId,
           role: "user",
           type: "image",
-          content: imageDataURL,
+          content: imageStorageURL,
           caption: confirmedText,
           extractedText: confirmedText,
           timestamp: new Date().toISOString(),
@@ -151,11 +171,6 @@ export const ChatProvider = ({ children }) => {
         setError(err.message);
         setIsLoading(false);
         toast.error(err.message || "Failed to send message. Please try again.");
-
-        // Remove optimistic message
-        setMessages((prev) =>
-          prev.filter((msg) => msg.id !== `msg_${Date.now()}`)
-        );
       }
     },
     [conversationId, messages.length, clearOCRState]

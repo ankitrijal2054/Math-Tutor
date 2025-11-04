@@ -201,22 +201,8 @@ const ocr = onRequest(async (req, res) => {
       }
 
       // ========== 5. SAVE OCR RESULT TO FIRESTORE (optional) ==========
-      try {
-        await db
-          .collection("conversations")
-          .doc(conversationId)
-          .collection("ocrHistory")
-          .add({
-            originalText: extractedText,
-            normalizedText: normalized,
-            confidence,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            uid,
-          });
-      } catch (error) {
-        console.warn("Warning: Could not save OCR history to Firestore", error);
-        // Non-critical error; don't fail the request
-      }
+      // Removed: ocrHistory subcollection save is no longer needed
+      // Extracted text is now stored in the message object with caption/extractedText fields
 
       // ========== 6. RETURN RESPONSE ==========
       res.status(200).json({
