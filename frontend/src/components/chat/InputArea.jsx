@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Send, Zap, Mic, X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
 import { compressImage } from "../../utils/imageCompression";
@@ -14,15 +14,6 @@ const InputArea = ({ onSend, disabled = false }) => {
   const dropZoneRef = useRef(null);
 
   const { openWhiteboard } = useWhiteboard();
-
-  // Auto-expand textarea as user types
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const newHeight = Math.min(textareaRef.current.scrollHeight, 120); // max 5 lines ~20px each
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  }, [input]);
 
   // Handle image selection from ImageUpload component
   const handleImageSelect = async (imageData) => {
@@ -174,7 +165,7 @@ const InputArea = ({ onSend, disabled = false }) => {
       )}
 
       {/* Input Row */}
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-stretch h-11">
         {/* Left Actions - Upload and Whiteboard */}
         <div className="flex gap-2 flex-shrink-0">
           <ImageUpload
@@ -185,7 +176,7 @@ const InputArea = ({ onSend, disabled = false }) => {
             onClick={openWhiteboard}
             disabled={disabled}
             title="Open whiteboard"
-            className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
+            className="h-full px-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200 flex items-center justify-center"
           >
             <Zap className="w-5 h-5" />
           </button>
@@ -204,7 +195,7 @@ const InputArea = ({ onSend, disabled = false }) => {
                 : "Ask a math question..."
             }
             disabled={disabled || isCompressing}
-            className="w-full px-4 py-3 bg-slate-700 text-white placeholder-slate-400 rounded-xl border border-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all duration-200 resize-none"
+            className="w-full h-full px-4 py-2 bg-slate-700 text-white placeholder-slate-400 rounded-xl border border-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all duration-200 resize-none overflow-y-auto"
             rows={1}
           />
         </div>
@@ -214,14 +205,14 @@ const InputArea = ({ onSend, disabled = false }) => {
           <button
             disabled
             title="Voice coming soon"
-            className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
+            className="h-full px-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200 flex items-center justify-center"
           >
             <Mic className="w-5 h-5" />
           </button>
           <button
             onClick={handleSend}
             disabled={isSendDisabled}
-            className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
+            className="h-full px-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0 flex items-center justify-center"
           >
             <Send className="w-5 h-5 text-white" />
           </button>
