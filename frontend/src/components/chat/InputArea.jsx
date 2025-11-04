@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Zap, Mic } from "lucide-react";
+import { Send, Zap, Mic, X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
 import { compressImage } from "../../utils/imageCompression";
 import toast from "react-hot-toast";
@@ -146,6 +146,14 @@ const InputArea = ({ onSend, disabled = false }) => {
               alt="Selected"
               className="h-24 w-24 object-cover rounded-lg border-2 border-indigo-500 shadow-lg"
             />
+            <button
+              onClick={() => setSelectedImage(null)}
+              disabled={disabled || isCompressing}
+              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 rounded-full p-1 transition-colors duration-200"
+              title="Remove image"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
             {isCompressing && (
               <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
                 <div className="animate-spin">
@@ -155,19 +163,9 @@ const InputArea = ({ onSend, disabled = false }) => {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-slate-400 truncate mb-2">
+            <p className="text-xs text-slate-400 truncate">
               {selectedImage.name}
             </p>
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Add a caption (optional)..."
-              disabled={disabled || isCompressing}
-              className="w-full px-3 py-2 bg-slate-700 text-white placeholder-slate-400 rounded-lg border border-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all duration-200 resize-none text-sm"
-              rows={2}
-            />
           </div>
         </div>
       )}
@@ -182,7 +180,9 @@ const InputArea = ({ onSend, disabled = false }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              selectedImage ? "Add a caption..." : "Ask a math question..."
+              selectedImage
+                ? "Add caption or ask a question..."
+                : "Ask a math question..."
             }
             disabled={disabled || isCompressing}
             className="w-full px-4 py-3 bg-slate-700 text-white placeholder-slate-400 rounded-xl border border-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all duration-200 resize-none"

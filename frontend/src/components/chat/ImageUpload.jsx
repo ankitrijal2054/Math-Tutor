@@ -1,12 +1,9 @@
-import React, { useRef, useState } from "react";
-import { X, Upload } from "lucide-react";
+import React, { useRef } from "react";
+import { Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 const ImageUpload = ({ onImageSelect, disabled = false }) => {
   const fileInputRef = useRef(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
 
   // Allowed image types and max file size (5MB)
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/heic", "image/webp"];
@@ -47,14 +44,7 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
     if (!validatedFile) return;
 
     try {
-      setIsCompressing(true);
       const dataURL = await fileToDataURL(validatedFile);
-      setSelectedImage({
-        file: validatedFile,
-        preview: dataURL,
-        name: validatedFile.name,
-      });
-
       // Notify parent component
       if (onImageSelect) {
         onImageSelect({
@@ -66,8 +56,6 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
     } catch (error) {
       console.error("Error reading file:", error);
       toast.error("Failed to load image. Please try again.");
-    } finally {
-      setIsCompressing(false);
     }
   };
 
@@ -79,46 +67,6 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
     }
     // Reset input value to allow selecting the same file again
     e.target.value = "";
-  };
-
-  // Handle drag and drop
-  const handleDragEnter = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const file = e.dataTransfer?.files?.[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  };
-
-  // Clear selected image
-  const handleClearImage = () => {
-    setSelectedImage(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    if (onImageSelect) {
-      onImageSelect(null);
-    }
   };
 
   // Trigger file input
@@ -139,36 +87,10 @@ const ImageUpload = ({ onImageSelect, disabled = false }) => {
         aria-label="Upload image"
       />
 
-      {/* Image preview */}
-      {selectedImage && (
-        <div className="relative inline-block">
-          <img
-            src={selectedImage.preview}
-            alt="Selected"
-            className="h-32 w-32 object-cover rounded-lg border-2 border-indigo-500 shadow-lg"
-          />
-          <button
-            onClick={handleClearImage}
-            disabled={disabled || isCompressing}
-            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 rounded-full p-1 transition-colors duration-200"
-            title="Remove image"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
-          {isCompressing && (
-            <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-              <div className="animate-spin">
-                <Upload className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Camera button - always visible */}
       <button
         onClick={handleCameraClick}
-        disabled={disabled || isCompressing}
+        disabled={disabled}
         title="Upload image from file or camera"
         className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
       >
