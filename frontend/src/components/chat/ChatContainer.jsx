@@ -4,6 +4,7 @@ import InputArea from "./InputArea";
 import TypingIndicator from "./TypingIndicator";
 import OCRConfirmation from "./OCRConfirmation";
 import OCRError from "./OCRError";
+import WhiteboardModal from "../whiteboard/WhiteboardModal";
 import { useChatContext } from "../../contexts/ChatContext";
 
 const ChatContainer = () => {
@@ -86,6 +87,9 @@ const ChatContainer = () => {
 
       {/* Input Area */}
       <InputArea onSend={handleSend} disabled={isLoading} />
+
+      {/* Whiteboard Modal */}
+      <WhiteboardModal onSend={handleSend} />
 
       {/* OCR Confirmation Modal */}
       {ocrState.extractedText && !ocrState.error && (

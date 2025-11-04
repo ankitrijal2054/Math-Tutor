@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Zap, Mic, X } from "lucide-react";
 import ImageUpload from "./ImageUpload";
 import { compressImage } from "../../utils/imageCompression";
+import { useWhiteboard } from "../../contexts/WhiteboardContext";
 import toast from "react-hot-toast";
 
 const InputArea = ({ onSend, disabled = false }) => {
@@ -11,6 +12,8 @@ const InputArea = ({ onSend, disabled = false }) => {
   const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef(null);
   const dropZoneRef = useRef(null);
+
+  const { openWhiteboard } = useWhiteboard();
 
   // Auto-expand textarea as user types
   useEffect(() => {
@@ -207,8 +210,9 @@ const InputArea = ({ onSend, disabled = false }) => {
           disabled={disabled || isCompressing}
         />
         <button
-          disabled
-          title="Whiteboard coming soon"
+          onClick={openWhiteboard}
+          disabled={disabled}
+          title="Open whiteboard"
           className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200"
         >
           <Zap className="w-5 h-5" />
