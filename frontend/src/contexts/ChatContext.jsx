@@ -25,9 +25,28 @@ export const ChatProvider = ({ children }) => {
    * Send a message and get AI response
    */
   const sendMessage = useCallback(
-    async (userMessage) => {
-      if (!conversationId || !userMessage.trim()) {
-        setError("Invalid message or conversation");
+    async (userMessageData) => {
+      if (!conversationId) {
+        setError("No active conversation");
+        return;
+      }
+
+      // Handle both old string format and new object format
+      let messageType = "text";
+      let messageContent = "";
+      let messageCaption = "";
+
+      if (typeof userMessageData === "string") {
+        // Legacy string format
+        messageContent = userMessageData;
+      } else if (typeof userMessageData === "object") {
+        messageType = userMessageData.type || "text";
+        messageContent = userMessageData.content || "";
+        messageCaption = userMessageData.caption || "";
+      }
+
+      if (!messageContent.trim()) {
+        setError("Message cannot be empty");
         return;
       }
 
@@ -38,15 +57,25 @@ export const ChatProvider = ({ children }) => {
         const userMessageObj = {
           id: `msg_${Date.now()}`,
           role: "user",
-          content: userMessage,
+          type: messageType,
+          content: messageContent,
+          caption: messageCaption || undefined,
           timestamp: new Date().toISOString(),
         };
 
         setMessages((prev) => [...prev, userMessageObj]);
         setIsLoading(true);
 
+        // For image messages, send text description to API
+        const apiMessageContent =
+          messageType === "image" && messageCaption
+            ? `[Image uploaded] ${messageCaption}`
+            : messageType === "image"
+            ? "[Image uploaded]"
+            : messageContent;
+
         // Call the backend API
-        const response = await callChatAPI(conversationId, userMessage);
+        const response = await callChatAPI(conversationId, apiMessageContent);
 
         if (!response.success) {
           throw new Error(response.error || "Failed to get response");
@@ -56,6 +85,7 @@ export const ChatProvider = ({ children }) => {
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
+          type: "text",
           content: response.message,
           timestamp: response.timestamp,
         };
@@ -64,7 +94,9 @@ export const ChatProvider = ({ children }) => {
 
         // Update conversation title if first message
         if (messages.length === 0) {
-          const title = userMessage.trim().substring(0, 50);
+          const title = (messageCaption || messageContent)
+            .trim()
+            .substring(0, 50);
           await updateConversation(conversationId, { title });
           setConversationMetadata((prev) => ({
             ...prev,

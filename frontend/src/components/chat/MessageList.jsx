@@ -45,6 +45,8 @@ const MessageList = ({ messages = [] }) => {
               role={message.role}
               content={message.content}
               timestamp={message.timestamp}
+              type={message.type || "text"}
+              caption={message.caption}
             />
           ))}
           <div ref={messagesEndRef} />

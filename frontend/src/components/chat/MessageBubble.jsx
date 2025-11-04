@@ -1,14 +1,22 @@
 import React, { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import MathRenderer from "../shared/MathRenderer";
 
-const MessageBubble = ({ role, content, timestamp }) => {
+const MessageBubble = ({
+  role,
+  content,
+  timestamp,
+  type = "text",
+  caption,
+}) => {
   const [showTimestamp, setShowTimestamp] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
   const { user } = useAuth();
 
   const isUser = role === "user";
   const isAssistant = role === "assistant";
+  const isImage = type === "image";
 
   // Format timestamp for display
   const formatTime = (date) => {
@@ -32,59 +40,129 @@ const MessageBubble = ({ role, content, timestamp }) => {
   };
 
   return (
-    <div
-      className={`flex gap-3 mb-4 animate-fadeIn ${
-        isUser ? "justify-end" : "justify-start"
-      }`}
-      onMouseEnter={() => setShowTimestamp(true)}
-      onMouseLeave={() => setShowTimestamp(false)}
-    >
-      {/* Assistant Avatar */}
-      {isAssistant && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-          <MessageCircle className="w-5 h-5 text-white" />
-        </div>
-      )}
-
-      {/* Message Content */}
+    <>
       <div
-        className={`max-w-xs lg:max-w-md flex flex-col ${
-          isUser ? "items-end" : "items-start"
+        className={`flex gap-3 mb-4 animate-fadeIn ${
+          isUser ? "justify-end" : "justify-start"
         }`}
+        onMouseEnter={() => setShowTimestamp(true)}
+        onMouseLeave={() => setShowTimestamp(false)}
       >
+        {/* Assistant Avatar */}
+        {isAssistant && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-white" />
+          </div>
+        )}
+
+        {/* Message Content */}
         <div
-          className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
-            isUser
-              ? "bg-white text-slate-900 rounded-br-none"
-              : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+          className={`max-w-xs lg:max-w-md flex flex-col ${
+            isUser ? "items-end" : "items-start"
           }`}
         >
-          <div className="text-sm leading-relaxed">
-            <MathRenderer content={content} />
-          </div>
+          {/* Image Message */}
+          {isImage && isUser && (
+            <div
+              className="relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 bg-gradient-to-r from-indigo-500 to-purple-600 p-1"
+              onClick={() => setShowImageModal(true)}
+            >
+              <img
+                src={content}
+                alt="User uploaded"
+                className="h-40 w-40 object-cover rounded-xl group-hover:opacity-80 transition-opacity"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors rounded-2xl">
+                <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100">
+                  View Full
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Text Message or Caption */}
+          {caption && isImage && (
+            <div
+              className={`px-4 py-2 rounded-2xl shadow-lg transition-all duration-200 mb-2 ${
+                isUser
+                  ? "bg-white text-slate-900 rounded-br-none"
+                  : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+              }`}
+            >
+              <div className="text-sm leading-relaxed italic text-opacity-80">
+                {caption}
+              </div>
+            </div>
+          )}
+
+          {/* Regular Text Message */}
+          {!isImage && (
+            <div
+              className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
+                isUser
+                  ? "bg-white text-slate-900 rounded-br-none"
+                  : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+              }`}
+            >
+              <div className="text-sm leading-relaxed">
+                <MathRenderer content={content} />
+              </div>
+            </div>
+          )}
+
+          {/* Timestamp - Always reserve space, show on hover */}
+          <p
+            className={`text-xs mt-1 h-4 transition-all duration-200 ${
+              showTimestamp && timestamp
+                ? "text-slate-400 opacity-100"
+                : "text-transparent opacity-0"
+            }`}
+          >
+            {timestamp ? formatTime(timestamp) : "00:00"}
+          </p>
         </div>
 
-        {/* Timestamp - Always reserve space, show on hover */}
-        <p
-          className={`text-xs mt-1 h-4 transition-all duration-200 ${
-            showTimestamp && timestamp
-              ? "text-slate-400 opacity-100"
-              : "text-transparent opacity-0"
-          }`}
-        >
-          {timestamp ? formatTime(timestamp) : "00:00"}
-        </p>
+        {/* User Avatar */}
+        {isUser && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <span className="text-xs font-semibold text-white">
+              {getUserInitial()}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* User Avatar */}
-      {isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-          <span className="text-xs font-semibold text-white">
-            {getUserInitial()}
-          </span>
+      {/* Image Modal */}
+      {showImageModal && isImage && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div
+            className="relative max-w-3xl max-h-[90vh] bg-white rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 rounded-full p-2 text-white transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={content}
+              alt="Full size"
+              className="w-full h-full object-contain"
+            />
+            {caption && (
+              <div className="bg-slate-800 text-white p-3 text-sm">
+                {caption}
+              </div>
+            )}
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
