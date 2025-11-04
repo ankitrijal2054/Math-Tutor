@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 COMPLETE ✅, Task 2.4 Next
+**Phase 2: Image & Vision Processing** - Task 2.1 COMPLETE ✅, Task 2.2 COMPLETE ✅, Task 2.3 COMPLETE ✅, Task 2.4 COMPLETE ✅
 
 ## Completed Tasks
 
@@ -16,208 +16,196 @@
 - ✅ **Task 2.1:** Image Upload UI - COMPLETE ✅
 - ✅ **Task 2.2:** OCR Backend Processing - COMPLETE ✅
 - ✅ **Task 2.3:** OCR Integration & Confirmation Flow - COMPLETE ✅
+- ✅ **Task 2.4:** Image Message Display - COMPLETE ✅
 
-## Task 2.3 - OCR Integration & Confirmation Flow - COMPLETE ✅
+## Task 2.4 - Image Message Display - COMPLETE ✅
 
-**Status:** ✅ ALL SUBTASKS COMPLETE - Ready for Testing
+**Status:** ✅ ALL SUBTASKS COMPLETE - TESTED AND WORKING
 
-### Frontend Components Created
+### UI/UX Improvements Made
 
-1. **OCRConfirmation.jsx** - NEW (85 lines)
+**1. Removed Optional Caption Textbox**
 
-   - Modal component showing extracted text from OCR
-   - Side-by-side image preview and extracted text display
-   - Editable textarea for reviewing/correcting extracted text
-   - Confidence indicator (High/Medium/Low) with visual feedback
-   - Three action buttons:
-     - ✓ Confirm (sends extracted text)
-     - ✏️ Edit (toggles edit mode for text)
-     - 🔄 Re-upload (clears and allows new image)
-   - Professional styling with gradient header and smooth animations
+- Simplified input flow - no separate caption textarea
+- Caption now goes directly in the main text input field
+- Placeholder updates: "Add caption or ask a question..." when image selected
 
-2. **OCRError.jsx** - NEW (85 lines)
+**2. Simplified Image Preview UI**
 
-   - Modal component for handling OCR failures
-   - Intelligent error message display based on error type:
-     - Image too blurry/unclear
-     - Not a math problem
-     - Invalid image format
-     - Generic processing errors
-   - Image preview showing original upload
-   - Helpful suggestions for what user can do
-   - Three action buttons:
-     - Cancel (closes modal)
-     - Type Manually (fallback text input)
-     - Retry (re-processes same image)
+- Removed redundant preview from ImageUpload component
+- Single clean preview in InputArea with delete button
+- Reduced visual clutter and confusion
 
-3. **ManualTextInput** (in ChatContainer) - NEW (40 lines)
-   - Modal for fallback when OCR fails
-   - Simple text area for manual problem input
-   - Two buttons: Cancel, Send
-   - Used when user chooses "Type Manually" option
+**3. Image Modal Implementation**
 
-### ChatContext Enhancements
+- Click thumbnail to view full-size image
+- Modal with close button (X) and click-outside to dismiss
+- Shows caption and extracted text below image
+- Graceful error handling for broken images
 
-**New State:**
+### Firebase Storage Integration
 
-```javascript
-ocrState = {
-  isProcessing: boolean, // OCR API call in progress
-  imageDataURL: string, // Current image being processed
-  extractedText: string, // Extracted text from OCR
-  confidence: "high" | "medium" | "low", // OCR confidence level
-  error: string, // Error message if OCR fails
-  originalImage: string, // Store original for re-attempts
-};
+**Problem Solved:** Images were stored as base64 in Firestore, causing:
+
+- Document size limit violations (1MB limit)
+- Image corruption on reload
+- Greyed-out/broken images after page refresh
+
+**Solution Implemented:**
+
+- Created `uploadImageToStorage()` function to upload to Firebase Storage
+- Store only the download URL in Firestore (much smaller)
+- Images persist perfectly across page reloads
+
+**Files Modified:**
+
+- `frontend/src/services/firestore.js` - Added Storage upload functions
+- `frontend/src/contexts/ChatContext.jsx` - Updated to use Storage URLs
+- `frontend/src/components/chat/MessageBubble.jsx` - Added image error handling
+
+### Infrastructure Setup
+
+**Firebase Storage Configuration:**
+
+1. ✅ Storage enabled in Firebase Console
+2. ✅ CORS configured for localhost:5173 development
+3. ✅ Security Rules updated to allow authenticated users to upload
+
+**CORS Configuration:**
+
+```json
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:*"
+    ],
+    "method": ["GET", "HEAD", "DELETE", "POST", "PUT"],
+    "responseHeader": ["Content-Type", "x-goog-meta-*", "x-goog-*"],
+    "maxAgeSeconds": 3600
+  }
+]
 ```
 
-**New Functions:**
+**Storage Security Rules:**
 
-- `processImageWithOCR(imageDataURL)` - Calls OCR API and manages extraction
-- `clearOCRState()` - Resets OCR state to initial
-- `sendConfirmedOCRText(confirmedText, imageDataURL)` - Sends confirmed text to chat
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read: if request.auth != null;
+    }
+    match /images/{userId}/{conversationId}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
-**Modified sendMessage:**
+### Backend Optimizations
 
-- Now intercepts image type messages
-- Triggers OCR flow instead of direct send
-- Maintains backward compatibility with text messages
+**Fixed Duplicate Message Saving:**
 
-### ChatContainer Integration
+- Removed redundant user message save from backend chat function
+- Frontend now saves user messages (especially images) first
+- Backend only saves assistant responses
+- Eliminates duplicate messages in conversations
 
-**New Features:**
+**Removed Redundant OCR History Collection:**
 
-- Displays OCRConfirmation modal when extraction succeeds
-- Displays OCRError modal when extraction fails
-- Shows ManualTextInput modal for fallback text entry
-- Handles all modal actions (confirm, edit, retry, re-upload, manual)
-- Seamless flow between error states and fallback options
+- Deleted unnecessary `ocrHistory` subcollection saves
+- Extracted text now stored directly in message document
+- Cleaner data structure with no redundancy
 
-### Firestore Updates
+**Files Modified:**
 
-**Enhanced saveMessage function:**
+- `functions/src/api/chat.js` - Removed user message save
+- `functions/src/api/ocr.js` - Removed ocrHistory collection save
 
-- Now accepts `additionalData` parameter for image-specific fields
-- Supports storing: caption, extractedText, and any other metadata
-- Properly updates conversation lastMessage with caption if available
+### Image Error Handling
 
-**Enhanced loadMessages function:**
+**MessageBubble Enhancements:**
 
-- Now loads caption and extractedText fields for image messages
-- Preserves all image metadata when loading conversations
+- Added image load error detection with `onError` handler
+- Displays "Image unavailable" placeholder if load fails
+- Shows caption/description in placeholder for context
+- Graceful degradation instead of broken image icons
+- Works for both thumbnail and full-size modal
 
-### MessageBubble Updates
-
-**Image Message Display:**
-
-- Displays both caption and extractedText (if different)
-- Caption shown as italic user note
-- Extracted text shown separately with "Extracted:" label
-- Both shown together in message preview
-- Full details displayed in image modal
-
-### Complete Image Upload Flow
+### Complete Image Flow (Updated)
 
 ```
 User Uploads Image
 ↓
-ImageUpload component → select image
+ImageUpload component → InputArea preview with delete button
 ↓
-InputArea → show preview
+User types caption/question in main input (no separate textbox)
 ↓
 User clicks Send
 ↓
-ChatContainer → sendMessage() with type: 'image'
+ChatContext.sendConfirmedOCRText()
 ↓
-ChatContext → processImageWithOCR()
+uploadImageToStorage() → Firebase Storage
 ↓
-callOCRAPI() → OpenAI Vision
+Get Storage URL (not base64!)
 ↓
-✓ Success → Show OCRConfirmation Modal
-✗ Failure → Show OCRError Modal
-        ├─ User clicks Retry → Re-run OCR
-        ├─ User clicks Type Manually → Show ManualTextInput
-        └─ User clicks Cancel → Clear state
-↓
-User confirms (or edits) text
-↓
-sendConfirmedOCRText()
-↓
-Add user message with image + extracted text
+Save to Firestore with Storage URL
 ↓
 Send extracted text to chat API
 ↓
-Get AI response
+Display image with Storage URL (crisp and clean)
 ↓
-Display image message with extracted text in chat
-↓
-Save everything to Firestore
+Reload page → Image still displays perfectly!
 ```
 
 ### Features Implemented
 
-✅ **OCR Processing:**
+✅ **Image Display:**
 
-- Calls OCR API with image data URL
-- Handles extraction results with confidence levels
-- Manages loading states during processing
+- Images show as clean thumbnails (max 300px)
+- No more greyed-out or broken images after reload
+- Sharp and perfectly rendered
 
-✅ **Confirmation UI:**
+✅ **Image Modal:**
 
-- Clean modal presentation
-- Side-by-side image and text preview
-- Editable text for corrections
-- Confidence indicator with visual feedback
+- Click thumbnail to view full-size
+- Professional modal with proper styling
+- Shows caption and extracted text
 
 ✅ **Error Handling:**
 
-- Intelligent error messages based on error type
-- Helpful suggestions for users
-- Retry capability for transient failures
-- Fallback to manual text input
+- Broken images show placeholder instead of error icon
+- User-friendly "Image unavailable" message
+- Graceful degradation
 
-✅ **Edit Capability:**
+✅ **Data Storage:**
 
-- Users can edit extracted text before sending
-- Toggle between view and edit mode
-- Cancel to discard edits
+- Images stored in Firebase Storage
+- Only URLs stored in Firestore (small documents)
+- Images persist across page reloads
+- Scalable solution for many images
 
-✅ **Re-upload Option:**
+✅ **Message Deduplication:**
 
-- Users can discard extraction and try again
-- Clears state for fresh upload
-- No lost state between attempts
+- No more duplicate messages
+- Frontend saves user messages first
+- Backend only saves responses
+- Clean, consistent message history
 
-✅ **Message Persistence:**
+### Testing Completed
 
-- Image, caption, and extracted text saved to Firestore
-- All metadata preserved when loading conversations
-- Properly displayed in chat history
+- ✅ Upload image → displays properly
+- ✅ Reload page → image persists, displays perfectly (no greying)
+- ✅ View full size → modal opens with image and text
+- ✅ Multiple images → all display correctly
+- ✅ Image errors → graceful placeholder shown
+- ✅ Message history → clean, no duplicates
 
-✅ **State Management:**
+### Next: Task 3.1 - Sidebar Component
 
-- Clean OCR state in ChatContext
-- Proper cleanup of modals
-- Seamless integration with existing chat flow
-
-### Testing Checklist - READY
-
-- [ ] Upload image of printed math problem → OCR extracts correctly
-- [ ] Confirm extracted text → Message sent and AI responds
-- [ ] Upload blurry image → Error shown with retry option
-- [ ] Choose "Type Manually" → Can type problem and send
-- [ ] Edit extracted text → Modified text sent to AI
-- [ ] Re-upload image → Can select and process new image
-- [ ] Refresh page → Images and extracted text persist in Firestore
-- [ ] Test with handwritten problem → OCR interpretation works
-- [ ] Test with non-math image → Error message shown
-- [ ] Mobile camera upload → Works with OCR flow
-- [ ] Multiple messages in conversation → Each properly saved
-- [ ] Confidence levels display correctly → High/Medium/Low badges show
-
-### Next: Task 2.4 - Image Message Display
-
-- Polish image message display in chat history
-- Implement image modal for viewing full size
-- Add lazy loading for image messages
-- Test image persistence across sessions
+- Build conversation list sidebar
+- Group conversations by date
+- Delete conversation functionality
+- Mobile drawer support

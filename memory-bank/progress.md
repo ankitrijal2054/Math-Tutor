@@ -185,36 +185,36 @@
 - ✅ Math rendering with KaTeX (inline and block)
 - ✅ Conversation persistence with titles and metadata
 - ✅ Message count tracking and ordering
+- ✅ Image upload with OCR text extraction
+- ✅ Image display in chat (no greying/persistence issues)
+- ✅ Image modal with full-size viewing
+- ✅ Firebase Storage integration (images persist perfectly)
+- ✅ Graceful image error handling
 
 ## What's Next
 
-### Immediate (Task 1.8 - Next 1-2 hours)
+### Immediate (Next - Task 3.1 - Sidebar)
 
-**Image Upload & Firebase Storage**
+**Conversation History / Sidebar UI**
 
-1. Create ImageUpload component
-   - File input with accept="image/\*"
-   - File validation (type and size)
-   - Preview display
-2. Integrate Firebase Storage
-   - Upload image file to Firebase
-   - Get download URL
-3. Add image messages to chat
-   - Save image URL with message
-   - Display image in message bubbles
-4. Test with sample images
-   - Verify upload and retrieval
-   - Check message display
+1. Build Sidebar component with conversation list
+2. Group conversations by date (Today, Yesterday, This Week, Older)
+3. Show last message preview and timestamps
+4. Delete conversation with confirmation
+5. Mobile drawer with hamburger menu
 
-### Short Term (Next 2-3 hours)
+### Short Term (Task 3.2 - Navigation)
 
-- **Task 1.9:** Conversation History / Sidebar UI
-- Polish chat interface for mobile
+- Conversation navigation and switching
+- Browser back/forward support
+- Preserve scroll position
+- Active conversation highlighting
 
-### Medium Term (Next 4-6 hours)
+### Medium Term (Task 4.x - Polish)
 
-- **Task 1.10:** UI/UX Polish and responsive design
-- End-to-end testing across devices
+- **Task 4.1:** UI/UX Polish and responsive design
+- **Task 4.2:** End-to-end testing across devices
+- **Task 4.3:** Performance optimization
 
 ## Development Velocity
 
@@ -225,8 +225,10 @@
 - **Task 1.5:** ~3 hours
 - **Task 1.6:** ~1.5 hours
 - **Task 1.7:** ~2.5 hours
-- **Average Rate:** ~3.4 hours per task
-- **Forecast:** MVP completion in 1-2 more hours (Tasks 1.8)
+- **Task 2.1-2.3:** ~8 hours
+- **Task 2.4:** ~3 hours (fixes + testing)
+- **Average Rate:** ~3.7 hours per task
+- **Total Completed:** ~37 hours
 
 ## Code Quality Status
 
@@ -238,6 +240,9 @@
 - ✅ Backend follows Node.js/Cloud Functions best practices
 - ✅ Responsive design patterns applied
 - ✅ Comprehensive error handling
+- ✅ Firebase Storage best practices implemented
+- ✅ Security Rules properly configured
+- ✅ CORS properly configured for development
 
 ## Testing Status
 
@@ -267,22 +272,53 @@
   - Timestamps properly managed
   - Messages load in correct order
   - Error handling and user feedback working
-- ⏳ Image upload and Firebase Storage (Task 1.8 - pending)
+- ✅ Image upload and display (Task 2.1-2.4 - COMPLETE)
+  - Image upload works correctly
+  - OCR extraction and confirmation working
+  - Images display as thumbnails in chat
+  - Click image opens full-size modal
+  - Images persist after page reload (Firebase Storage)
+  - No greyed-out or broken images
+  - Graceful error handling for broken images
+  - Message deduplication fixed
+  - Multiple images in conversation all work
 
 ## Deployment Status
 
 **Backend (LIVE ✅)**
 
-- Cloud Function: https://chat-4gp5jdis3q-uc.a.run.app
+- Chat Function: https://chat-4gp5jdis3q-uc.a.run.app
+- OCR Function: https://ocr-XXXXX-uc.a.run.app (deployed)
 - Firebase Project: ai-math-tutor-b09db (Blaze plan)
 - OpenAI API: Configured and working
-- Database: Firestore ready
+- Database: Firestore ready with proper security
+- Storage: Firebase Storage enabled with CORS + Security Rules
+- Recent Updates:
+  - Removed duplicate user message saving in chat function
+  - Removed redundant ocrHistory subcollection in OCR function
+  - All functions optimized for production
 
-**Frontend (Ready for Task 1.8)**
+**Frontend (LIVE ✅)**
 
 - Conversation persistence: ✅ Complete
-- All components ready for image upload
-- Firebase Storage emulator ready
+- Image upload and display: ✅ Complete
+- Firebase Storage integration: ✅ Complete
+- CORS configuration: ✅ Complete
+- Storage Security Rules: ✅ Complete
+- Ready for Phase 3 (Sidebar)
+
+## Infrastructure
+
+- ✅ Vite dev server with HMR
+- ✅ Tailwind CSS v4 with custom animations
+- ✅ Firebase Auth with email/password + Google OAuth
+- ✅ Firebase Firestore database
+- ✅ Firebase Storage with CORS configured
+- ✅ Firebase Cloud Functions deployed
+- ✅ Google Cloud Run deployment (production)
+- ✅ Firebase Blaze plan activated
+- ✅ CORS headers configured for development
+- ✅ Storage Security Rules configured
 
 ## Risk Management
 
@@ -290,4 +326,7 @@
 - ✅ All major dependencies available
 - ✅ Development path clear
 - ✅ Firebase costs under control (Blaze plan with free credit)
+- ✅ Image storage scalable (Firebase Storage)
+- ✅ Backend optimized (no more duplicate messages)
 - ⚠️ Note: OpenAI API key stored in .env (keep secure)
+- ⚠️ Note: Firebase credentials in env files (standard practice)
