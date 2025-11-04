@@ -37,15 +37,11 @@ export const WhiteboardProvider = ({ children }) => {
   }, []);
 
   const clearWhiteboard = useCallback(() => {
-    if (canvasRef && canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d");
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      setDrawingHistory([]);
-      setRedoHistory([]);
-      setCaptionText("");
-    }
-  }, [canvasRef]);
+    setDrawingHistory([]);
+    setRedoHistory([]);
+    setCaptionText("");
+    // Canvas will be cleared by WhiteboardCanvas useEffect watching drawingHistory
+  }, []);
 
   const undo = useCallback(() => {
     if (drawingHistory.length > 0) {
