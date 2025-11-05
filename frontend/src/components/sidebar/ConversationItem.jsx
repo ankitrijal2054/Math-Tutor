@@ -43,7 +43,6 @@ const ConversationItem = ({
       await deleteConversation(conversation.id);
       setShowDeleteModal(false);
       onDeleted();
-      toast.success("Conversation deleted");
     } catch (error) {
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");

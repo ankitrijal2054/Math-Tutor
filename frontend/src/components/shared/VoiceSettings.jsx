@@ -18,7 +18,6 @@ const VoiceSettings = ({ isOpen, onClose }) => {
   const handleApply = () => {
     voice.setVoice(tempVoice);
     voice.setSpeed(tempSpeed);
-    toast.success("Voice settings saved");
     onClose();
   };
 
@@ -28,14 +27,12 @@ const VoiceSettings = ({ isOpen, onClose }) => {
     voice.setVoice("nova");
     voice.setSpeed(1.0);
     localStorage.removeItem("openaiVoiceSettings");
-    toast.success("Voice settings reset to defaults");
   };
 
   const handleTestVoice = async () => {
     setIsTestingVoice(true);
     try {
       await voice.testVoice();
-      toast.success("Playing test audio");
     } catch (error) {
       console.error("Test voice error:", error);
       // Error toast is handled by the hook

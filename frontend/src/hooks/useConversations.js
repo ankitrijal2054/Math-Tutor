@@ -43,7 +43,6 @@ export const useConversations = () => {
       setConversations((prev) =>
         prev.filter((conv) => conv.id !== conversationId)
       );
-      toast.success("Conversation deleted");
     } catch (err) {
       console.error("Delete conversation error:", err);
       setError(err.message);

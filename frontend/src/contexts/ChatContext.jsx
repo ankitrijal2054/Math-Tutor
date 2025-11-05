@@ -93,8 +93,6 @@ export const ChatProvider = ({ children }) => {
           confidence: result.confidence,
           error: null,
         }));
-
-        toast.success("Text extracted successfully!");
       } catch (err) {
         console.error("OCR error:", err);
         setOCRState((prev) => ({
@@ -147,7 +145,6 @@ export const ChatProvider = ({ children }) => {
         generatedProblems: result.problems || [],
       });
 
-      toast.success("Practice problems generated!");
       return result.problems;
     } catch (err) {
       console.error("Problem generation error:", err);
@@ -270,7 +267,6 @@ export const ChatProvider = ({ children }) => {
 
         // Clear OCR state and show success
         clearOCRState();
-        toast.success("Problem sent to tutor!");
         setIsLoading(false);
       } catch (err) {
         console.error("Send message error:", err);

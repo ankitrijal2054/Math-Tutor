@@ -79,7 +79,6 @@ const SignupForm = () => {
         displayName: formData.displayName,
       });
 
-      toast.success("Welcome! Your account has been created.");
       navigate("/chat");
     } catch (error) {
       toast.error(error.message || "Failed to create account");

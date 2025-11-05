@@ -50,7 +50,6 @@ const SidebarComponent = (
       const conversationId = await createConversation("New conversation");
       navigate(`/chat/${conversationId}`);
       onMobileClose(); // Close drawer on mobile
-      toast.success("New conversation created!");
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to create conversation");
