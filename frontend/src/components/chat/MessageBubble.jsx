@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Volume2, Square } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useOpenAIVoice } from "../../hooks/useOpenAIVoice";
 import MathRenderer from "../shared/MathRenderer";
 
 const MessageBubble = ({
@@ -14,7 +15,9 @@ const MessageBubble = ({
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [isSpeakingThisMessage, setIsSpeakingThisMessage] = useState(false);
   const { user } = useAuth();
+  const voice = useOpenAIVoice();
 
   const isUser = role === "user";
   const isAssistant = role === "assistant";
@@ -41,6 +44,26 @@ const MessageBubble = ({
     }
     return "U";
   };
+
+  // Handle text-to-speech
+  const handleSpeak = () => {
+    if (isSpeakingThisMessage && voice.isSpeaking) {
+      voice.stopSpeaking();
+      setIsSpeakingThisMessage(false);
+    } else {
+      // Remove markdown-style math notation for speech
+      const textToSpeak = content.replace(/\$\$/g, "").replace(/\$/g, "");
+      voice.speak(textToSpeak);
+      setIsSpeakingThisMessage(true);
+    }
+  };
+
+  // Handle when speech ends
+  React.useEffect(() => {
+    if (!voice.isSpeaking && isSpeakingThisMessage) {
+      setIsSpeakingThisMessage(false);
+    }
+  }, [voice.isSpeaking, isSpeakingThisMessage]);
 
   return (
     <>
@@ -132,16 +155,46 @@ const MessageBubble = ({
 
           {/* Regular Text Message */}
           {!isImage && !isWhiteboard && (
-            <div
-              className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
-                isUser
-                  ? "bg-white text-slate-900 rounded-br-none"
-                  : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
-              }`}
-            >
-              <div className="text-sm leading-relaxed">
-                <MathRenderer content={content} />
+            <div className="flex items-end gap-2">
+              <div
+                className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
+                  isUser
+                    ? "bg-white text-slate-900 rounded-br-none"
+                    : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+                }`}
+              >
+                <div className="text-sm leading-relaxed">
+                  <MathRenderer content={content} />
+                </div>
               </div>
+
+              {/* Speaker Button for Assistant Messages */}
+              {isAssistant && voice.isSupported && (
+                <button
+                  onClick={handleSpeak}
+                  title={
+                    voice.isGenerating
+                      ? "Generating speech..."
+                      : isSpeakingThisMessage
+                      ? "Stop playing"
+                      : "Read aloud"
+                  }
+                  disabled={voice.isGenerating}
+                  className={`flex-shrink-0 mb-1 p-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isSpeakingThisMessage
+                      ? "bg-purple-600 hover:bg-purple-700 text-white"
+                      : "bg-slate-700 hover:bg-slate-600 text-slate-300"
+                  }`}
+                >
+                  {isSpeakingThisMessage ? (
+                    <Square className="w-4 h-4" />
+                  ) : voice.isGenerating ? (
+                    <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-100 rounded-full animate-spin" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
+                </button>
+              )}
             </div>
           )}
 

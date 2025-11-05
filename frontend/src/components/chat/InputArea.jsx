@@ -1,8 +1,9 @@
-import React, { useState, useRef } from "react";
-import { Send, Zap, Mic, X } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Zap, Mic, X, Square } from "lucide-react";
 import ImageUpload from "./ImageUpload";
 import { compressImage } from "../../utils/imageCompression";
 import { useWhiteboard } from "../../contexts/WhiteboardContext";
+import { useVoice } from "../../hooks/useVoice";
 import toast from "react-hot-toast";
 
 const InputArea = ({ onSend, disabled = false }) => {
@@ -14,6 +15,27 @@ const InputArea = ({ onSend, disabled = false }) => {
   const dropZoneRef = useRef(null);
 
   const { openWhiteboard } = useWhiteboard();
+  const voice = useVoice();
+
+  // Register callback for auto-emitted transcripts
+  useEffect(() => {
+    voice.setOnTranscript((finalTranscript) => {
+      console.log("✅ Received auto-emitted transcript:", finalTranscript);
+      if (finalTranscript && finalTranscript.trim().length > 0) {
+        if (!disabled && !isCompressing) {
+          onSend({
+            type: "text",
+            content: finalTranscript.trim(),
+          });
+          setInput("");
+          toast.success("Message sent!");
+        } else {
+          setInput(finalTranscript.trim());
+          toast.info("Please wait before sending another message");
+        }
+      }
+    });
+  }, [disabled, isCompressing, onSend, voice]);
 
   // Handle image selection from ImageUpload component
   const handleImageSelect = async (imageData) => {
@@ -36,6 +58,40 @@ const InputArea = ({ onSend, disabled = false }) => {
       setSelectedImage(null);
     } finally {
       setIsCompressing(false);
+    }
+  };
+
+  // Handle voice recording start/stop
+  const handleVoiceToggle = () => {
+    console.log("Voice toggle clicked - isListening:", voice.isListening);
+
+    if (voice.isListening) {
+      console.log("Currently listening, calling stopListening()...");
+      const finalTranscript = voice.stopListening();
+      console.log("Transcript returned:", finalTranscript);
+
+      if (finalTranscript && finalTranscript.trim().length > 0) {
+        console.log("Sending message:", finalTranscript);
+        // Send the voice message directly to chat
+        if (!disabled && !isCompressing) {
+          onSend({
+            type: "text",
+            content: finalTranscript.trim(),
+          });
+          setInput("");
+          toast.success("Message sent!");
+        } else {
+          // If disabled, just add to input field
+          setInput(finalTranscript.trim());
+          toast.info("Please wait before sending another message");
+        }
+      } else {
+        console.log("No transcript or empty");
+        toast.error("No speech detected. Please try again.");
+      }
+    } else {
+      console.log("Not listening, calling startListening()...");
+      voice.startListening();
     }
   };
 
@@ -164,17 +220,27 @@ const InputArea = ({ onSend, disabled = false }) => {
         </div>
       )}
 
+      {/* Voice Recording Indicator */}
+      {voice.isListening && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-lg animate-pulse">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <span className="text-sm text-red-400">
+            {voice.interimTranscript || "Listening..."}
+          </span>
+        </div>
+      )}
+
       {/* Input Row */}
       <div className="flex gap-2 items-stretch h-11">
         {/* Left Actions - Upload and Whiteboard */}
         <div className="flex gap-2 flex-shrink-0">
           <ImageUpload
             onImageSelect={handleImageSelect}
-            disabled={disabled || isCompressing}
+            disabled={disabled || isCompressing || voice.isListening}
           />
           <button
             onClick={openWhiteboard}
-            disabled={disabled}
+            disabled={disabled || voice.isListening}
             title="Open whiteboard"
             className="h-full px-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200 flex items-center justify-center"
           >
@@ -194,7 +260,7 @@ const InputArea = ({ onSend, disabled = false }) => {
                 ? "Add caption or ask a question..."
                 : "Ask a math question..."
             }
-            disabled={disabled || isCompressing}
+            disabled={disabled || isCompressing || voice.isListening}
             className="w-full h-full px-4 py-2 bg-slate-700 text-white placeholder-slate-400 rounded-xl border border-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all duration-200 resize-none overflow-y-auto"
             rows={1}
           />
@@ -203,11 +269,26 @@ const InputArea = ({ onSend, disabled = false }) => {
         {/* Right Actions - Voice and Send */}
         <div className="flex gap-2 flex-shrink-0">
           <button
-            disabled
-            title="Voice coming soon"
-            className="h-full px-3 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors duration-200 flex items-center justify-center"
+            onClick={handleVoiceToggle}
+            disabled={disabled || isCompressing || !voice.isSupported}
+            title={
+              voice.isSupported
+                ? voice.isListening
+                  ? "Stop recording"
+                  : "Start voice recording"
+                : "Voice not supported on this browser"
+            }
+            className={`h-full px-3 rounded-lg transition-colors duration-200 flex items-center justify-center ${
+              voice.isListening
+                ? "bg-red-500 hover:bg-red-600 text-white"
+                : "bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300"
+            }`}
           >
-            <Mic className="w-5 h-5" />
+            {voice.isListening ? (
+              <Square className="w-5 h-5" />
+            ) : (
+              <Mic className="w-5 h-5" />
+            )}
           </button>
           <button
             onClick={handleSend}

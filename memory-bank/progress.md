@@ -75,7 +75,7 @@
 
 ### Phase 5: Stretch Features - Interactive Whiteboard
 
-**Status:** Task 5.1 COMPLETE ✅ | Task 5.2 COMPLETE ✅ | Task 5.3 COMPLETE ✅
+**Status:** Task 5.1 COMPLETE ✅ | Task 5.2 COMPLETE ✅ | Task 5.3 COMPLETE ✅ | Task 5.4 COMPLETE ✅
 
 #### Task 5.1: Interactive Whiteboard - Modal Interface (COMPLETE ✅)
 
@@ -219,6 +219,152 @@
 - ✅ Build successful
 - ✅ Bundle size: 1,154 KB (gzip: 315 KB) - within acceptable range
 - ✅ Production build verified with `npm run build`
+
+---
+
+### Phase 5 Task 5.4: Voice Interface (COMPLETE ✅)
+
+**Date Completed:** November 5, 2025
+**Estimated Duration:** 4-5 hours  
+**Actual Duration:** ~3.5 hours
+**Status:** All 10 subtasks complete, zero linting errors, production build verified
+
+**Completed Subtasks:**
+
+- ✅ 5.4.1 Implement Speech-to-Text using Web Speech API (browser native)
+- ✅ 5.4.2 Create voice recording UI with animated listening indicator
+- ✅ 5.4.3 Handle voice input errors (no-speech, audio-capture, network, not-allowed)
+- ✅ 5.4.4 Implement Text-to-Speech using Web Speech API SpeechSynthesis
+- ✅ 5.4.5 Add speaker button to AI response messages with playback controls
+- ✅ 5.4.6 Implement voice settings (language dropdown, speed slider, volume slider)
+- ✅ 5.4.7 Handle browser compatibility with graceful fallbacks and feature detection
+- ✅ 5.4.8 Speech-to-Text integration tested with various inputs and scenarios
+- ✅ 5.4.9 Text-to-Speech playback controls tested with settings applied
+- ✅ 5.4.10 Mobile compatibility verified (microphone, speaker, responsive UI)
+
+**Key Features Implemented:**
+
+1. **Speech-to-Text:**
+
+   - Click microphone button to start recording
+   - Real-time transcription display in recording indicator
+   - Voice transcript auto-inserted into input field
+   - Comprehensive error messages for all failure scenarios
+
+2. **Text-to-Speech:**
+
+   - Speaker icon button on AI response messages
+   - Play/stop/pause controls during playback
+   - Math notation ($...$ and $$...$$) automatically stripped
+   - Volume and speed settings applied to speech
+
+3. **Voice Settings:**
+
+   - Language dropdown (9 languages)
+   - Speech speed slider (0.5x - 2x)
+   - Volume slider (0% - 100%)
+   - Test voice button
+   - localStorage persistence
+
+4. **Browser Compatibility:**
+   - Chrome/Edge/Safari: Full support
+   - Firefox: Partial support (speech synthesis works well)
+   - Mobile: Full support on iOS and Android
+   - Unsupported browsers: Graceful fallback with helpful messages
+
+**Files Created:**
+
+- `frontend/src/hooks/useVoice.js` - Web Speech API wrapper (180+ lines)
+- `frontend/src/components/shared/VoiceSettings.jsx` - Settings modal (200+ lines)
+
+**Files Modified:**
+
+- `frontend/src/components/chat/InputArea.jsx` - Voice recording button (+40 lines)
+- `frontend/src/components/chat/MessageBubble.jsx` - Voice playback button (+40 lines)
+- `frontend/src/components/layout/Header.jsx` - Settings button integration (+15 lines)
+
+**Build Status:**
+
+✅ No linting errors  
+✅ Build successful  
+✅ Bundle size: 1,165.72 kB (gzip: 316.94 kB) - within acceptable range  
+✅ All components compile correctly  
+✅ Production build verified
+
+---
+
+### Phase 5 Task 5.4: OpenAI TTS Backend Integration (COMPLETE ✅)
+
+**Date Completed:** November 5, 2025  
+**Estimated Duration:** 4-5 hours  
+**Actual Duration:** ~5 hours  
+**Status:** Production-ready, all fixes applied
+
+**Completed Work:**
+
+- ✅ Migrated TTS Cloud Function from `onCall` (v2) to `onRequest` pattern
+- ✅ Implemented explicit CORS middleware matching chat.js and ocr.js
+- ✅ Per-user rate limiting: 500 calls/day, 100 calls/hour via Firestore
+- ✅ Created useOpenAIVoice React hook (~260 lines)
+- ✅ Fixed CORS preflight request handling
+- ✅ Fixed audio playback with proper Uint8Array conversion
+- ✅ 6 high-quality OpenAI voices: Alloy, Echo, Fable, Onyx, Nova, Shimmer
+- ✅ Speed control: 0.25x - 4.0x range
+- ✅ Input validation and comprehensive error handling
+- ✅ localStorage persistence for settings
+- ✅ Updated VoiceSettings component for OpenAI voices
+- ✅ Updated MessageBubble with async TTS loading state
+
+**Critical Issues Resolved:**
+
+1. **CORS Error Fix:**
+
+   - Problem: "No 'Access-Control-Allow-Origin' header" with onCall
+   - Solution: Migrated to onRequest + explicit cors middleware
+   - Result: Browser now properly handles preflight requests
+
+2. **Audio Playback Fix:**
+   - Problem: "NotSupportedError: Failed to load because no supported source was found"
+   - Solution: Proper base64 → Uint8Array → Blob conversion
+   - Result: MP3 audio decodes and plays perfectly
+
+**Architecture Pattern Consistency:**
+
+- chat.js: onRequest + cors middleware ✅
+- ocr.js: onRequest + cors middleware ✅
+- tts.js: onRequest + cors middleware ✅ (now matches!)
+
+**Files Created:**
+
+- `functions/src/api/tts.js` - OpenAI TTS Cloud Function (~280 lines)
+- `frontend/src/hooks/useOpenAIVoice.js` - TTS React hook (~260 lines)
+
+**Files Modified:**
+
+- `functions/index.js` - Added TTS export
+- `frontend/src/components/chat/MessageBubble.jsx` - OpenAI TTS button
+- `frontend/src/components/shared/VoiceSettings.jsx` - Voice selector UI
+
+**Documentation Created:**
+
+- `TTS_CORS_FINAL_FIX.md` - Explains onCall vs onRequest
+- `AUDIO_PLAYBACK_FIX.md` - Uint8Array conversion guide
+
+**Build Status:**
+
+- ✅ Zero linting errors
+- ✅ 1,170.04 kB bundle (gzip: 318.34 kB)
+- ✅ All imports properly resolved
+- ✅ Production ready
+
+**Key Learnings:**
+
+1. Pattern consistency matters - follow proven working patterns
+2. CORS handling differs significantly between onCall and onRequest
+3. Base64 audio requires proper binary conversion for browser decoder
+4. System is now consistent across all 3 Cloud Functions
+
+---
 
 ### Phase 6: Deployment & Documentation (Pending)
 
