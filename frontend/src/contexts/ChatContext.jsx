@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { auth } from "../services/firebase";
-import { callChatAPI, callOCRAPI } from "../services/api";
+import {
+  callChatAPI,
+  callOCRAPI,
+  callGenerateProblemsAPI,
+} from "../services/api";
 import {
   createConversation,
   loadMessages,
@@ -32,6 +36,13 @@ export const ChatProvider = ({ children }) => {
     error: null,
     originalImage: null, // Store original image for re-upload flow
     messageType: "image", // Track if this is "image" or "whiteboard"
+  });
+
+  // Problem generation state management
+  const [problemGenerationState, setProblemGenerationState] = useState({
+    isProcessing: false,
+    error: null,
+    generatedProblems: null,
   });
 
   /**
@@ -109,6 +120,54 @@ export const ChatProvider = ({ children }) => {
       confidence: null,
       error: null,
       originalImage: null,
+    });
+  }, []);
+
+  /**
+   * Generate practice problems from a solved problem
+   */
+  const generateProblems = useCallback(async (solvedProblem) => {
+    try {
+      setProblemGenerationState({
+        isProcessing: true,
+        error: null,
+        generatedProblems: null,
+      });
+
+      const result = await callGenerateProblemsAPI(solvedProblem, 3);
+
+      if (!result.success) {
+        throw new Error("Failed to generate problems");
+      }
+
+      setProblemGenerationState({
+        isProcessing: false,
+        error: null,
+        generatedProblems: result.problems || [],
+      });
+
+      toast.success("Practice problems generated!");
+      return result.problems;
+    } catch (err) {
+      console.error("Problem generation error:", err);
+      setProblemGenerationState({
+        isProcessing: false,
+        error: err.message || "Failed to generate practice problems",
+        generatedProblems: null,
+      });
+      toast.error("Failed to generate practice problems");
+      return null;
+    }
+  }, []);
+
+  /**
+   * Clear problem generation state
+   */
+  const clearProblems = useCallback(() => {
+    setProblemGenerationState({
+      isProcessing: false,
+      error: null,
+      generatedProblems: null,
     });
   }, []);
 
@@ -459,6 +518,10 @@ export const ChatProvider = ({ children }) => {
     processImageWithOCR,
     clearOCRState,
     sendConfirmedOCRText,
+    // Problem generation state and handlers
+    problemGenerationState,
+    generateProblems,
+    clearProblems,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

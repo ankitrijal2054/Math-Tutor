@@ -9,7 +9,7 @@ import {
   clearScrollPosition,
 } from "../../utils/helpers";
 
-const MessageList = ({ messages = [] }) => {
+const MessageList = ({ messages = [], onGenerateProblems }) => {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const { conversationId, sendMessage, isLoading } = useChatContext();
@@ -96,6 +96,7 @@ const MessageList = ({ messages = [] }) => {
                 timestamp={message.timestamp}
                 type={message.type || "text"}
                 caption={message.caption}
+                onGenerateProblems={onGenerateProblems}
               />
             </div>
           ))}
