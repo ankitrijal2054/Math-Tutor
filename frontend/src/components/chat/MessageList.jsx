@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import MessageBubble from "./MessageBubble";
 import EmptyChatState from "./EmptyChatState";
 import MessageSkeletons from "./MessageSkeletons";
@@ -22,18 +22,29 @@ const MessageList = ({ messages = [], onGenerateProblems }) => {
     }
   };
 
-  // Restore scroll position when loading conversation or when messages change
+  // Scroll to bottom helper function
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      // Use requestAnimationFrame for smoother scrolling
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  }, []);
+
+  // Auto-scroll to bottom on new messages (always scroll to latest message)
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Small delay to ensure DOM has rendered the new message
+      const timer = setTimeout(scrollToBottom, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, scrollToBottom]);
+
+  // Restore scroll position when loading conversation
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (messages.length > 0 && containerRef.current) {
-        const savedPosition = getScrollPosition(conversationId);
-        if (savedPosition > 0) {
-          containerRef.current.scrollTop = savedPosition;
-        } else {
-          // Default: scroll to bottom for new messages
-          messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-        }
-      } else if (messages.length === 0 && containerRef.current) {
+      if (messages.length === 0 && containerRef.current) {
         // Clear scroll and show empty state
         clearScrollPosition(conversationId);
         containerRef.current.scrollTop = 0;
@@ -42,17 +53,6 @@ const MessageList = ({ messages = [], onGenerateProblems }) => {
 
     return () => clearTimeout(timer);
   }, [messages.length, conversationId]);
-
-  // Auto-scroll to bottom on new messages (if user is at bottom)
-  useEffect(() => {
-    if (containerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-      // Only auto-scroll if user is near the bottom
-      if (scrollHeight - (scrollTop + clientHeight) < 100) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  }, [messages]);
 
   // Save scroll position before unmounting or switching conversations
   useEffect(() => {
