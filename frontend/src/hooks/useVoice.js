@@ -29,6 +29,9 @@ export const useVoice = () => {
   const recognitionRef = useRef(null);
   const synthesisRef = useRef(null);
   const utteranceRef = useRef(null);
+  const onTranscriptRef = useRef(null);
+  const currentTranscriptRef = useRef("");
+  const currentInterimRef = useRef("");
 
   // Initialize APIs on mount
   useEffect(() => {
@@ -61,16 +64,18 @@ export const useVoice = () => {
       recognitionRef.current = new SpeechRecognition();
       synthesisRef.current = SpeechSynthesis;
 
-      // Configure recognition
+      // Configure recognition with the loaded language
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = language;
 
       // Speech Recognition event handlers
       recognitionRef.current.onstart = () => {
+        console.log("🎤 Speech recognition STARTED");
         setIsListening(true);
         setTranscript("");
         setInterimTranscript("");
+        currentTranscriptRef.current = "";
+        currentInterimRef.current = "";
       };
 
       recognitionRef.current.onresult = (event) => {
@@ -87,11 +92,23 @@ export const useVoice = () => {
           }
         }
 
+        console.log(
+          "📝 Recognition result - interim:",
+          interimText,
+          "final:",
+          finalText
+        );
         setInterimTranscript(interimText);
-        setTranscript((prev) => prev + finalText);
+        currentInterimRef.current = interimText;
+        setTranscript((prev) => {
+          const newVal = prev + finalText;
+          currentTranscriptRef.current = newVal;
+          return newVal;
+        });
       };
 
       recognitionRef.current.onerror = (event) => {
+        console.error("❌ Speech recognition error:", event.error);
         let errorMessage = "Voice error occurred";
 
         switch (event.error) {
@@ -117,7 +134,26 @@ export const useVoice = () => {
       };
 
       recognitionRef.current.onend = () => {
+        console.log("🛑 Speech recognition ENDED");
         setIsListening(false);
+
+        // Auto-emit transcript when speech ends
+        if (
+          onTranscriptRef.current &&
+          (currentTranscriptRef.current || currentInterimRef.current)
+        ) {
+          const finalTranscript = (
+            currentTranscriptRef.current + currentInterimRef.current
+          ).trim();
+          console.log(
+            "📤 Auto-emitting transcript on speech end:",
+            finalTranscript
+          );
+          onTranscriptRef.current(finalTranscript);
+          // Reset refs
+          currentTranscriptRef.current = "";
+          currentInterimRef.current = "";
+        }
       };
 
       setIsSupported(true);
@@ -143,6 +179,8 @@ export const useVoice = () => {
     }
 
     try {
+      // Ensure language is set before starting
+      recognitionRef.current.lang = language;
       setTranscript("");
       setInterimTranscript("");
       recognitionRef.current.start();
@@ -150,16 +188,23 @@ export const useVoice = () => {
       console.error("Error starting recognition:", error);
       toast.error("Could not start voice recording");
     }
-  }, []);
+  }, [language]);
 
   // Stop listening and return transcript
   const stopListening = useCallback(() => {
-    if (!recognitionRef.current) return;
+    console.log("Stopping voice recording");
+    if (!recognitionRef.current) return "";
 
     try {
+      // Store the current transcript values before stopping
+      const currentTranscript = transcript;
+      const currentInterim = interimTranscript;
+
       recognitionRef.current.stop();
-      const finalTranscript = transcript + interimTranscript;
       setInterimTranscript("");
+
+      const finalTranscript = currentTranscript + currentInterim;
+      console.log("Voice transcript captured:", finalTranscript);
       return finalTranscript.trim();
     } catch (error) {
       console.error("Error stopping recognition:", error);
@@ -243,6 +288,11 @@ export const useVoice = () => {
     return synthesisRef.current ? synthesisRef.current.speaking : false;
   }, []);
 
+  // Set transcript callback
+  const setOnTranscript = useCallback((callback) => {
+    onTranscriptRef.current = callback;
+  }, []);
+
   return {
     // Recognition
     isListening,
@@ -251,6 +301,7 @@ export const useVoice = () => {
     startListening,
     stopListening,
     clearTranscript,
+    setOnTranscript,
 
     // Synthesis
     isSpeaking,

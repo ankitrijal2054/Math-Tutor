@@ -17,6 +17,26 @@ const InputArea = ({ onSend, disabled = false }) => {
   const { openWhiteboard } = useWhiteboard();
   const voice = useVoice();
 
+  // Register callback for auto-emitted transcripts
+  useEffect(() => {
+    voice.setOnTranscript((finalTranscript) => {
+      console.log("✅ Received auto-emitted transcript:", finalTranscript);
+      if (finalTranscript && finalTranscript.trim().length > 0) {
+        if (!disabled && !isCompressing) {
+          onSend({
+            type: "text",
+            content: finalTranscript.trim(),
+          });
+          setInput("");
+          toast.success("Message sent!");
+        } else {
+          setInput(finalTranscript.trim());
+          toast.info("Please wait before sending another message");
+        }
+      }
+    });
+  }, [disabled, isCompressing, onSend, voice]);
+
   // Handle image selection from ImageUpload component
   const handleImageSelect = async (imageData) => {
     if (!imageData) {
@@ -43,22 +63,34 @@ const InputArea = ({ onSend, disabled = false }) => {
 
   // Handle voice recording start/stop
   const handleVoiceToggle = () => {
+    console.log("Voice toggle clicked - isListening:", voice.isListening);
+
     if (voice.isListening) {
+      console.log("Currently listening, calling stopListening()...");
       const finalTranscript = voice.stopListening();
-      if (finalTranscript) {
-        setInput((prev) => {
-          const newInput = prev
-            ? prev + " " + finalTranscript
-            : finalTranscript;
-          return newInput;
-        });
-        toast.success("Voice recorded");
+      console.log("Transcript returned:", finalTranscript);
+
+      if (finalTranscript && finalTranscript.trim().length > 0) {
+        console.log("Sending message:", finalTranscript);
+        // Send the voice message directly to chat
+        if (!disabled && !isCompressing) {
+          onSend({
+            type: "text",
+            content: finalTranscript.trim(),
+          });
+          setInput("");
+          toast.success("Message sent!");
+        } else {
+          // If disabled, just add to input field
+          setInput(finalTranscript.trim());
+          toast.info("Please wait before sending another message");
+        }
+      } else {
+        console.log("No transcript or empty");
+        toast.error("No speech detected. Please try again.");
       }
     } else {
-      if (!navigator.permissions) {
-        toast.error("Microphone access required");
-        return;
-      }
+      console.log("Not listening, calling startListening()...");
       voice.startListening();
     }
   };
