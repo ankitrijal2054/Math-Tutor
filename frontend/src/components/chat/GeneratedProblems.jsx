@@ -27,12 +27,17 @@ const GeneratedProblems = ({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-amber-600" />
-          <h3 className="font-semibold text-gray-800">Practice Problems</h3>
+          <div>
+            <h3 className="font-semibold text-gray-800">Great Work! 🎉</h3>
+            <p className="text-xs text-gray-600 mt-1">
+              Would you like to try similar problems?
+            </p>
+          </div>
         </div>
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0"
             aria-label="Dismiss"
           >
             ✕
@@ -81,7 +86,7 @@ const GeneratedProblems = ({
       {/* Instructions */}
       {!isLoading && !error && problems?.length > 0 && (
         <p className="text-xs text-gray-600 mt-3">
-          Click a problem to start practicing with it
+          Select a problem to master this concept! ✨
         </p>
       )}
     </div>

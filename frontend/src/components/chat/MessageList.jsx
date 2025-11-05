@@ -97,6 +97,7 @@ const MessageList = ({ messages = [], onGenerateProblems }) => {
                 type={message.type || "text"}
                 caption={message.caption}
                 onGenerateProblems={onGenerateProblems}
+                answerVerification={message.answerVerification}
               />
             </div>
           ))}

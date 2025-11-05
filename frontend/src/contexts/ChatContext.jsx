@@ -13,6 +13,7 @@ import {
   uploadImageToStorage,
   saveMessage,
 } from "../services/firestore";
+import { extractVerificationTag } from "../utils/mathVerifier";
 import toast from "react-hot-toast";
 
 const ChatContext = createContext(null);
@@ -236,13 +237,23 @@ export const ChatProvider = ({ children }) => {
           throw new Error(response.error || "Failed to get response");
         }
 
+        // Extract verification tag from AI response
+        const verification = extractVerificationTag(response.message);
+
         // Add AI response
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
           type: "text",
-          content: response.message,
+          content: verification.cleanText, // Use clean text without tags for display
           timestamp: response.timestamp,
+          answerVerification: verification.tagType
+            ? {
+                hasTag: verification.hasTag,
+                tagType: verification.tagType, // "CORRECT" or "NEEDS_REVIEW"
+                isAnswerCorrect: verification.tagType === "CORRECT",
+              }
+            : undefined,
         };
 
         setMessages((prev) => [...prev, aiMessageObj]);
@@ -372,13 +383,23 @@ export const ChatProvider = ({ children }) => {
           throw new Error(response.error || "Failed to get response");
         }
 
+        // Extract verification tag from AI response
+        const verification = extractVerificationTag(response.message);
+
         // Add AI response to messages (backend already saved it)
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
           type: "text",
-          content: response.message,
+          content: verification.cleanText, // Use clean text without tags for display
           timestamp: response.timestamp,
+          answerVerification: verification.tagType
+            ? {
+                hasTag: verification.hasTag,
+                tagType: verification.tagType, // "CORRECT" or "NEEDS_REVIEW"
+                isAnswerCorrect: verification.tagType === "CORRECT",
+              }
+            : undefined,
         };
 
         setMessages((prev) => [...prev, aiMessageObj]);

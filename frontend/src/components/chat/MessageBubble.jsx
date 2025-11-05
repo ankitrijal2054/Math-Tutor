@@ -12,6 +12,7 @@ const MessageBubble = ({
   caption,
   extractedText,
   onGenerateProblems,
+  answerVerification,
 }) => {
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -197,16 +198,18 @@ const MessageBubble = ({
                 </button>
               )}
 
-              {/* Generate Practice Problems Button */}
-              {isAssistant && onGenerateProblems && (
-                <button
-                  onClick={() => onGenerateProblems(content)}
-                  title="Generate similar practice problems"
-                  className="flex-shrink-0 mb-1 p-2 rounded-lg transition-colors duration-200 bg-amber-600 hover:bg-amber-700 text-white"
-                >
-                  <Sparkles className="w-4 h-4" />
-                </button>
-              )}
+              {/* Generate Practice Problems Button - Only on verified correct answers */}
+              {isAssistant &&
+                onGenerateProblems &&
+                answerVerification?.isAnswerCorrect && (
+                  <button
+                    onClick={() => onGenerateProblems(content)}
+                    title="Generate similar practice problems"
+                    className="flex-shrink-0 mb-1 p-2 rounded-lg transition-all duration-200 bg-amber-600 hover:bg-amber-700 text-white animate-pulse"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                )}
             </div>
           )}
 
