@@ -23,13 +23,23 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
       const ctx = canvas.getContext("2d");
       const rect = canvas.getBoundingClientRect();
 
-      // Set canvas resolution to match display size
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      // Get device pixel ratio for proper scaling (important for iPad Retina)
+      const dpr = window.devicePixelRatio || 1;
+
+      // Set canvas internal resolution (accounting for device pixel ratio)
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+
+      // Scale the canvas back down to CSS size
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+
+      // Scale context to match device pixel ratio
+      ctx.scale(dpr, dpr);
 
       // Set default canvas style
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, rect.width, rect.height);
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
@@ -37,7 +47,7 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
 
       // Redraw existing history on mount
       if (drawingHistory.length > 0) {
-        redrawCanvas(ctx);
+        redrawCanvas(ctx, rect.width, rect.height, dpr);
       }
     }
 
@@ -46,20 +56,22 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
       const canvas = canvasRef.current;
       if (canvas) {
         const rect = canvas.getBoundingClientRect();
-        const oldWidth = canvas.width;
-        const oldHeight = canvas.height;
+        const dpr = window.devicePixelRatio || 1;
 
         // Store current canvas content
-        const imageData = canvas
-          .getContext("2d")
-          .getImageData(0, 0, oldWidth, oldHeight);
+        const ctx = canvas.getContext("2d");
+        const oldWidth = rect.width;
+        const oldHeight = rect.height;
+        const imageData = ctx.getImageData(0, 0, oldWidth, oldHeight);
 
-        // Resize
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        // Resize with device pixel ratio
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx.scale(dpr, dpr);
 
         // Restore content and redraw
-        const ctx = canvas.getContext("2d");
         ctx.putImageData(imageData, 0, 0);
       }
     };
@@ -71,18 +83,23 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
   // Watch drawingHistory and redraw canvas when it changes (for undo/redo)
   useEffect(() => {
     if (canvasRef.current && drawingHistory !== undefined) {
-      const ctx = canvasRef.current.getContext("2d");
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const ctx = canvas.getContext("2d");
+
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      ctx.fillRect(0, 0, rect.width, rect.height);
+
       if (drawingHistory.length > 0) {
-        redrawCanvas(ctx);
+        redrawCanvas(ctx, rect.width, rect.height, dpr);
       }
     }
   }, [drawingHistory]);
 
-  const redrawCanvas = (ctx) => {
+  const redrawCanvas = (ctx, canvasWidth, canvasHeight, dpr = 1) => {
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
@@ -141,8 +158,20 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
 
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    // Handle both mouse and touch events
+    let clientX, clientY;
+
+    if (e.touches && e.touches.length > 0) {
+      // Touch event
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.clientX !== undefined) {
+      // Mouse or pointer event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    } else {
+      return { x: 0, y: 0 };
+    }
 
     return {
       x: clientX - rect.left,
@@ -151,7 +180,7 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
   };
 
   const handleMouseDown = (e) => {
-    if (e.button !== 0) return; // Only left click
+    if (e.button !== 0 && e.button !== undefined) return; // Only left click or touch
 
     const pos = getCanvasCoordinates(e);
     setStartPos(pos);
@@ -171,6 +200,7 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
     const currentPos = getCanvasCoordinates(e);
     const ctx = canvasRef.current.getContext("2d");
     const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
 
     if (selectedTool === "pen") {
       ctx.strokeStyle = "#000000";
@@ -197,7 +227,7 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
     ) {
       // Draw preview for shapes
       setPreview({ current: currentPos });
-      redrawCanvas(ctx);
+      redrawCanvas(ctx, rect.width, rect.height);
 
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 2;
@@ -314,8 +344,13 @@ const WhiteboardCanvas = ({ height = "80%" }) => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className={`w-full bg-white cursor-crosshair touch-none`}
-      style={{ height, display: "block" }}
+      className={`w-full bg-white cursor-crosshair touch-none select-none block`}
+      style={{
+        height,
+        touchAction: "none",
+        WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+      }}
     />
   );
 };
