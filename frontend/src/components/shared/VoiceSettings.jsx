@@ -5,31 +5,16 @@ import toast from "react-hot-toast";
 
 const VoiceSettings = ({ isOpen, onClose }) => {
   const voice = useVoice();
-  const [tempLanguage, setTempLanguage] = useState(voice.language);
   const [tempRate, setTempRate] = useState(voice.speechRate);
   const [tempVolume, setTempVolume] = useState(voice.volume);
 
   // Update temp values when voice settings change
   useEffect(() => {
-    setTempLanguage(voice.language);
     setTempRate(voice.speechRate);
     setTempVolume(voice.volume);
-  }, [voice.language, voice.speechRate, voice.volume]);
-
-  const languages = [
-    { code: "en-US", name: "English (US)" },
-    { code: "en-GB", name: "English (UK)" },
-    { code: "es-ES", name: "Spanish" },
-    { code: "fr-FR", name: "French" },
-    { code: "de-DE", name: "German" },
-    { code: "it-IT", name: "Italian" },
-    { code: "ja-JP", name: "Japanese" },
-    { code: "zh-CN", name: "Chinese (Simplified)" },
-    { code: "pt-BR", name: "Portuguese (Brazil)" },
-  ];
+  }, [voice.speechRate, voice.volume]);
 
   const handleApply = () => {
-    voice.setLanguage(tempLanguage);
     voice.setSpeechRate(tempRate);
     voice.setVolume(tempVolume);
 
@@ -37,7 +22,6 @@ const VoiceSettings = ({ isOpen, onClose }) => {
     localStorage.setItem(
       "voiceSettings",
       JSON.stringify({
-        language: tempLanguage,
         speechRate: tempRate,
         volume: tempVolume,
       })
@@ -48,10 +32,8 @@ const VoiceSettings = ({ isOpen, onClose }) => {
   };
 
   const handleReset = () => {
-    setTempLanguage("en-US");
     setTempRate(1);
     setTempVolume(1);
-    voice.setLanguage("en-US");
     voice.setSpeechRate(1);
     voice.setVolume(1);
     localStorage.removeItem("voiceSettings");
@@ -98,28 +80,6 @@ const VoiceSettings = ({ isOpen, onClose }) => {
                 Voice features are not supported on this browser.
               </div>
             )}
-
-            {/* Language Selection */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Language
-              </label>
-              <select
-                value={tempLanguage}
-                onChange={(e) => setTempLanguage(e.target.value)}
-                disabled={!voice.isSupported}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-slate-400 mt-1">
-                Affects both speech recognition and text-to-speech
-              </p>
-            </div>
 
             {/* Speech Rate */}
             <div>

@@ -21,9 +21,11 @@ export const useVoice = () => {
   const [transcript, setTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(true);
-  const [language, setLanguage] = useState("en-US");
   const [speechRate, setSpeechRate] = useState(1);
   const [volume, setVolume] = useState(1);
+
+  // Language fixed to English
+  const language = "en-US";
 
   // Refs
   const recognitionRef = useRef(null);
@@ -47,12 +49,8 @@ export const useVoice = () => {
     try {
       const savedSettings = localStorage.getItem("voiceSettings");
       if (savedSettings) {
-        const {
-          language: savedLang,
-          speechRate: savedRate,
-          volume: savedVol,
-        } = JSON.parse(savedSettings);
-        setLanguage(savedLang || "en-US");
+        const { speechRate: savedRate, volume: savedVol } =
+          JSON.parse(savedSettings);
         setSpeechRate(savedRate || 1);
         setVolume(savedVol || 1);
       }
@@ -163,13 +161,6 @@ export const useVoice = () => {
       toast.error("Voice features not available on this browser");
     }
   }, []);
-
-  // Update language when changed
-  useEffect(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.lang = language;
-    }
-  }, [language]);
 
   // Start listening
   const startListening = useCallback(() => {
@@ -313,8 +304,6 @@ export const useVoice = () => {
 
     // Settings
     isSupported,
-    language,
-    setLanguage,
     speechRate,
     setSpeechRate,
     volume,
