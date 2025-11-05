@@ -42,6 +42,7 @@ const ChatContainer = ({ sidebarRef }) => {
   const handleOCRConfirm = (confirmedText) => {
     if (ocrState.imageDataURL && confirmedText.trim()) {
       sendConfirmedOCRText(confirmedText, ocrState.imageDataURL);
+      clearOCRState(); // Close modal immediately
     }
   };
 
