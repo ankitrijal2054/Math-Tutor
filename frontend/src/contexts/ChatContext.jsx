@@ -443,7 +443,27 @@ export const ChatProvider = ({ children }) => {
 
       // Load messages
       const loadedMessages = await loadMessages(convId);
-      setMessages(loadedMessages);
+
+      // Extract verification tags from loaded messages (they're stored with tags)
+      const messagesWithVerification = loadedMessages.map((msg) => {
+        if (msg.role === "assistant" && msg.content) {
+          const verification = extractVerificationTag(msg.content);
+          return {
+            ...msg,
+            content: verification.cleanText, // Use clean text for display
+            answerVerification: verification.tagType
+              ? {
+                  hasTag: verification.hasTag,
+                  tagType: verification.tagType,
+                  isAnswerCorrect: verification.tagType === "CORRECT",
+                }
+              : undefined,
+          };
+        }
+        return msg;
+      });
+
+      setMessages(messagesWithVerification);
 
       // Load conversation metadata
       const metadata = await loadConversationMetadata(convId);
