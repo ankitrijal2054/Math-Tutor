@@ -1,51 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { X, Volume2, Zap } from "lucide-react";
-import { useVoice } from "../../hooks/useVoice";
+import { useOpenAIVoice } from "../../hooks/useOpenAIVoice";
 import toast from "react-hot-toast";
 
 const VoiceSettings = ({ isOpen, onClose }) => {
-  const voice = useVoice();
-  const [tempRate, setTempRate] = useState(voice.speechRate);
-  const [tempVolume, setTempVolume] = useState(voice.volume);
+  const voice = useOpenAIVoice();
+  const [tempVoice, setTempVoice] = useState(voice.voice);
+  const [tempSpeed, setTempSpeed] = useState(voice.speed);
+  const [isTestingVoice, setIsTestingVoice] = useState(false);
 
   // Update temp values when voice settings change
   useEffect(() => {
-    setTempRate(voice.speechRate);
-    setTempVolume(voice.volume);
-  }, [voice.speechRate, voice.volume]);
+    setTempVoice(voice.voice);
+    setTempSpeed(voice.speed);
+  }, [voice.voice, voice.speed]);
 
   const handleApply = () => {
-    voice.setSpeechRate(tempRate);
-    voice.setVolume(tempVolume);
-
-    // Save to localStorage
-    localStorage.setItem(
-      "voiceSettings",
-      JSON.stringify({
-        speechRate: tempRate,
-        volume: tempVolume,
-      })
-    );
-
+    voice.setVoice(tempVoice);
+    voice.setSpeed(tempSpeed);
     toast.success("Voice settings saved");
     onClose();
   };
 
   const handleReset = () => {
-    setTempRate(1);
-    setTempVolume(1);
-    voice.setSpeechRate(1);
-    voice.setVolume(1);
-    localStorage.removeItem("voiceSettings");
+    setTempVoice("nova");
+    setTempSpeed(1.0);
+    voice.setVoice("nova");
+    voice.setSpeed(1.0);
+    localStorage.removeItem("openaiVoiceSettings");
     toast.success("Voice settings reset to defaults");
   };
 
-  const handleTestVoice = () => {
-    const testText = `Hello! I'm testing the voice settings at ${(
-      tempRate * 100
-    ).toFixed(0)}% speed.`;
-    voice.speak(testText);
-    toast.success("Playing test audio");
+  const handleTestVoice = async () => {
+    setIsTestingVoice(true);
+    try {
+      await voice.testVoice();
+      toast.success("Playing test audio");
+    } catch (error) {
+      console.error("Test voice error:", error);
+      // Error toast is handled by the hook
+    } finally {
+      setIsTestingVoice(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -77,68 +73,85 @@ const VoiceSettings = ({ isOpen, onClose }) => {
           <div className="p-6 space-y-6">
             {!voice.isSupported && (
               <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-300 text-sm">
-                Voice features are not supported on this browser.
+                Voice features are not available. Please check your TTS
+                configuration.
               </div>
             )}
 
-            {/* Speech Rate */}
+            {/* Voice Selection */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Voice
+              </label>
+              <select
+                value={tempVoice}
+                onChange={(e) => setTempVoice(e.target.value)}
+                disabled={!voice.isSupported}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {voice.voices.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-400 mt-1">
+                Choose your preferred voice for text-to-speech
+              </p>
+            </div>
+
+            {/* Speech Speed */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Speech Speed:{" "}
                 <span className="text-indigo-400">
-                  {(tempRate * 100).toFixed(0)}%
+                  {(tempSpeed * 100).toFixed(0)}%
                 </span>
               </label>
               <input
                 type="range"
-                min="0.5"
-                max="2"
-                step="0.1"
-                value={tempRate}
-                onChange={(e) => setTempRate(parseFloat(e.target.value))}
+                min="0.25"
+                max="4"
+                step="0.25"
+                value={tempSpeed}
+                onChange={(e) => setTempSpeed(parseFloat(e.target.value))}
                 disabled={!voice.isSupported}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>Slower (0.5x)</span>
+                <span>Slow (0.25x)</span>
                 <span>Normal (1x)</span>
-                <span>Faster (2x)</span>
+                <span>Fast (4x)</span>
               </div>
             </div>
 
-            {/* Volume */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Volume:{" "}
-                <span className="text-indigo-400">
-                  {(tempVolume * 100).toFixed(0)}%
-                </span>
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={tempVolume}
-                onChange={(e) => setTempVolume(parseFloat(e.target.value))}
-                disabled={!voice.isSupported}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>Mute</span>
-                <span>Normal</span>
-                <span>Max</span>
+            {/* Calls Remaining */}
+            {voice.callsRemaining !== null && (
+              <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded text-indigo-300 text-sm">
+                TTS calls remaining today:{" "}
+                <span className="font-semibold">{voice.callsRemaining}</span>
               </div>
-            </div>
+            )}
 
             {/* Test Button */}
             <button
               onClick={handleTestVoice}
-              disabled={!voice.isSupported}
+              disabled={
+                !voice.isSupported || isTestingVoice || voice.isGenerating
+              }
               className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              <Zap className="w-4 h-4" />
-              Test Voice
+              {isTestingVoice || voice.isGenerating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-indigo-600 rounded-full animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4" />
+                  Test Voice
+                </>
+              )}
             </button>
           </div>
 

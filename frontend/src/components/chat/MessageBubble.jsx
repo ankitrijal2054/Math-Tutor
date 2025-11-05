@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MessageCircle, X, Volume2, Square } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useVoice } from "../../hooks/useVoice";
+import { useOpenAIVoice } from "../../hooks/useOpenAIVoice";
 import MathRenderer from "../shared/MathRenderer";
 
 const MessageBubble = ({
@@ -17,7 +17,7 @@ const MessageBubble = ({
   const [imageLoadError, setImageLoadError] = useState(false);
   const [isSpeakingThisMessage, setIsSpeakingThisMessage] = useState(false);
   const { user } = useAuth();
-  const voice = useVoice();
+  const voice = useOpenAIVoice();
 
   const isUser = role === "user";
   const isAssistant = role === "assistant";
@@ -172,8 +172,15 @@ const MessageBubble = ({
               {isAssistant && voice.isSupported && (
                 <button
                   onClick={handleSpeak}
-                  title={isSpeakingThisMessage ? "Stop playing" : "Read aloud"}
-                  className={`flex-shrink-0 mb-1 p-2 rounded-lg transition-colors duration-200 ${
+                  title={
+                    voice.isGenerating
+                      ? "Generating speech..."
+                      : isSpeakingThisMessage
+                      ? "Stop playing"
+                      : "Read aloud"
+                  }
+                  disabled={voice.isGenerating}
+                  className={`flex-shrink-0 mb-1 p-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                     isSpeakingThisMessage
                       ? "bg-purple-600 hover:bg-purple-700 text-white"
                       : "bg-slate-700 hover:bg-slate-600 text-slate-300"
@@ -181,6 +188,8 @@ const MessageBubble = ({
                 >
                   {isSpeakingThisMessage ? (
                     <Square className="w-4 h-4" />
+                  ) : voice.isGenerating ? (
+                    <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-100 rounded-full animate-spin" />
                   ) : (
                     <Volume2 className="w-4 h-4" />
                   )}

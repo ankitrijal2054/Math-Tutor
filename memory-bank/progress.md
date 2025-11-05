@@ -293,6 +293,79 @@
 
 ---
 
+### Phase 5 Task 5.4: OpenAI TTS Backend Integration (COMPLETE ✅)
+
+**Date Completed:** November 5, 2025  
+**Estimated Duration:** 4-5 hours  
+**Actual Duration:** ~5 hours  
+**Status:** Production-ready, all fixes applied
+
+**Completed Work:**
+
+- ✅ Migrated TTS Cloud Function from `onCall` (v2) to `onRequest` pattern
+- ✅ Implemented explicit CORS middleware matching chat.js and ocr.js
+- ✅ Per-user rate limiting: 500 calls/day, 100 calls/hour via Firestore
+- ✅ Created useOpenAIVoice React hook (~260 lines)
+- ✅ Fixed CORS preflight request handling
+- ✅ Fixed audio playback with proper Uint8Array conversion
+- ✅ 6 high-quality OpenAI voices: Alloy, Echo, Fable, Onyx, Nova, Shimmer
+- ✅ Speed control: 0.25x - 4.0x range
+- ✅ Input validation and comprehensive error handling
+- ✅ localStorage persistence for settings
+- ✅ Updated VoiceSettings component for OpenAI voices
+- ✅ Updated MessageBubble with async TTS loading state
+
+**Critical Issues Resolved:**
+
+1. **CORS Error Fix:**
+
+   - Problem: "No 'Access-Control-Allow-Origin' header" with onCall
+   - Solution: Migrated to onRequest + explicit cors middleware
+   - Result: Browser now properly handles preflight requests
+
+2. **Audio Playback Fix:**
+   - Problem: "NotSupportedError: Failed to load because no supported source was found"
+   - Solution: Proper base64 → Uint8Array → Blob conversion
+   - Result: MP3 audio decodes and plays perfectly
+
+**Architecture Pattern Consistency:**
+
+- chat.js: onRequest + cors middleware ✅
+- ocr.js: onRequest + cors middleware ✅
+- tts.js: onRequest + cors middleware ✅ (now matches!)
+
+**Files Created:**
+
+- `functions/src/api/tts.js` - OpenAI TTS Cloud Function (~280 lines)
+- `frontend/src/hooks/useOpenAIVoice.js` - TTS React hook (~260 lines)
+
+**Files Modified:**
+
+- `functions/index.js` - Added TTS export
+- `frontend/src/components/chat/MessageBubble.jsx` - OpenAI TTS button
+- `frontend/src/components/shared/VoiceSettings.jsx` - Voice selector UI
+
+**Documentation Created:**
+
+- `TTS_CORS_FINAL_FIX.md` - Explains onCall vs onRequest
+- `AUDIO_PLAYBACK_FIX.md` - Uint8Array conversion guide
+
+**Build Status:**
+
+- ✅ Zero linting errors
+- ✅ 1,170.04 kB bundle (gzip: 318.34 kB)
+- ✅ All imports properly resolved
+- ✅ Production ready
+
+**Key Learnings:**
+
+1. Pattern consistency matters - follow proven working patterns
+2. CORS handling differs significantly between onCall and onRequest
+3. Base64 audio requires proper binary conversion for browser decoder
+4. System is now consistent across all 3 Cloud Functions
+
+---
+
 ### Phase 6: Deployment & Documentation (Pending)
 
 **Estimated Duration:** 16-21 hours  
