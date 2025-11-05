@@ -149,7 +149,7 @@ const MessageBubble = ({
               {extractedText && extractedText !== caption && (
                 <div className="text-xs leading-relaxed opacity-75 border-t border-current pt-1">
                   <span className="font-semibold">Extracted: </span>
-                  {extractedText}
+                  <MathRenderer content={extractedText} />
                 </div>
               )}
             </div>
