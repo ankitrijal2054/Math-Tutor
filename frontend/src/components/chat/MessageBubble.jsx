@@ -132,29 +132,6 @@ const MessageBubble = ({
             </div>
           )}
 
-          {/* Text Message or Caption with Extracted Text*/}
-          {(caption || extractedText) && (isImage || isWhiteboard) && (
-            <div
-              className={`px-4 py-2 rounded-2xl shadow-lg transition-all duration-200 mb-2 ${
-                isUser
-                  ? "bg-white text-slate-900 rounded-br-none"
-                  : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
-              }`}
-            >
-              {caption && (
-                <div className="text-sm leading-relaxed italic text-opacity-80 mb-1">
-                  {caption}
-                </div>
-              )}
-              {extractedText && extractedText !== caption && (
-                <div className="text-xs leading-relaxed opacity-75 border-t border-current pt-1">
-                  <span className="font-semibold">Extracted: </span>
-                  <MathRenderer content={extractedText} />
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Regular Text Message */}
           {!isImage && !isWhiteboard && (
             <div className="flex items-end gap-2">
