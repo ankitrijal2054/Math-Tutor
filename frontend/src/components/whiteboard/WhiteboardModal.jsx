@@ -32,7 +32,6 @@ const WhiteboardModal = ({ onSend }) => {
   const confirmClear = () => {
     clearWhiteboard();
     setShowClearConfirm(false);
-    toast.success("Canvas cleared");
   };
 
   const handleSend = async () => {
@@ -62,7 +61,6 @@ const WhiteboardModal = ({ onSend }) => {
       // Close modal and reset after successful send
       closeWhiteboard();
       clearWhiteboard();
-      toast.success("Drawing sent!");
     } catch (error) {
       console.error("Failed to send whiteboard:", error);
       toast.error("Failed to send drawing. Please try again.");

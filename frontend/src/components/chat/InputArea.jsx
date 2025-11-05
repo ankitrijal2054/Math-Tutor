@@ -28,7 +28,6 @@ const InputArea = ({ onSend, disabled = false }) => {
             content: finalTranscript.trim(),
           });
           setInput("");
-          toast.success("Message sent!");
         } else {
           setInput(finalTranscript.trim());
           toast.info("Please wait before sending another message");
@@ -79,7 +78,6 @@ const InputArea = ({ onSend, disabled = false }) => {
             content: finalTranscript.trim(),
           });
           setInput("");
-          toast.success("Message sent!");
         } else {
           // If disabled, just add to input field
           setInput(finalTranscript.trim());

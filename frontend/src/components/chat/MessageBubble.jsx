@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MessageCircle, X, Volume2, Square } from "lucide-react";
+import { MessageCircle, X, Volume2, Square, Sparkles } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useOpenAIVoice } from "../../hooks/useOpenAIVoice";
 import MathRenderer from "../shared/MathRenderer";
@@ -11,6 +11,8 @@ const MessageBubble = ({
   type = "text",
   caption,
   extractedText,
+  onGenerateProblems,
+  answerVerification,
 }) => {
   const [showTimestamp, setShowTimestamp] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -195,6 +197,19 @@ const MessageBubble = ({
                   )}
                 </button>
               )}
+
+              {/* Generate Practice Problems Button - Only on verified correct answers */}
+              {isAssistant &&
+                onGenerateProblems &&
+                answerVerification?.isAnswerCorrect && (
+                  <button
+                    onClick={() => onGenerateProblems(content)}
+                    title="Generate similar practice problems"
+                    className="flex-shrink-0 mb-1 p-2 rounded-lg transition-all duration-200 bg-amber-600 hover:bg-amber-700 text-white animate-pulse"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                )}
             </div>
           )}
 

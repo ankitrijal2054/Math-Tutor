@@ -40,8 +40,6 @@ const EmptySidebarState = () => {
         });
         window.dispatchEvent(chatEvent);
       }, 100);
-
-      toast.success("Let's solve this together!");
     } catch (error) {
       console.error("Error creating conversation from example:", error);
       toast.error("Failed to start conversation");

@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { Plus } from "lucide-react";
 import ConversationList from "./ConversationList";
+import SearchConversations from "./SearchConversations";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { createConversation } from "../../services/firestore";
@@ -24,6 +25,8 @@ const SidebarComponent = (
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [conversationsCount, setConversationsCount] = useState(0);
   const conversationListRef = useRef(null);
 
   // Expose refetchConversations via ref
@@ -47,7 +50,6 @@ const SidebarComponent = (
       const conversationId = await createConversation("New conversation");
       navigate(`/chat/${conversationId}`);
       onMobileClose(); // Close drawer on mobile
-      toast.success("New conversation created!");
     } catch (error) {
       console.error("Error creating conversation:", error);
       toast.error("Failed to create conversation");
@@ -59,8 +61,8 @@ const SidebarComponent = (
   return (
     <aside
       className={`${
-        isMobileOpen ? "block fixed inset-y-0 left-0 z-50" : "hidden md:block"
-      } w-64 bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700 overflow-hidden flex flex-col transition-all duration-300 ease-in-out`}
+        isMobileOpen ? "flex fixed inset-y-0 left-0 z-50" : "hidden md:flex"
+      } w-64 bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700 overflow-hidden flex-col transition-all duration-300 ease-in-out`}
     >
       {/* Header - New Conversation Button */}
       <div className="flex-shrink-0 p-4 border-b border-slate-700">
@@ -74,11 +76,24 @@ const SidebarComponent = (
         </button>
       </div>
 
+      {/* Search Component - Fixed */}
+      {conversationsCount > 5 && (
+        <div className="flex-shrink-0">
+          <SearchConversations
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery("")}
+          />
+        </div>
+      )}
+
       {/* Conversation List - Scrollable */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <ConversationList
           ref={conversationListRef}
           onSelectConversation={onMobileClose}
+          searchQuery={searchQuery}
+          onConversationsCountChange={setConversationsCount}
         />
       </div>
     </aside>

@@ -54,7 +54,6 @@ const LoginForm = () => {
 
     try {
       await signInWithEmail(formData.email, formData.password);
-      toast.success("Welcome back!");
       navigate("/chat");
     } catch (error) {
       toast.error(error.message || "Failed to sign in");

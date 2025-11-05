@@ -21,7 +21,6 @@ const GoogleSignIn = () => {
         });
       }
 
-      toast.success("Welcome!");
       navigate("/chat");
     } catch (error) {
       // Handle common Google sign-in errors

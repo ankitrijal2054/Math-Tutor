@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { auth } from "../services/firebase";
-import { callChatAPI, callOCRAPI } from "../services/api";
+import {
+  callChatAPI,
+  callOCRAPI,
+  callGenerateProblemsAPI,
+} from "../services/api";
 import {
   createConversation,
   loadMessages,
@@ -9,6 +13,7 @@ import {
   uploadImageToStorage,
   saveMessage,
 } from "../services/firestore";
+import { extractVerificationTag } from "../utils/mathVerifier";
 import toast from "react-hot-toast";
 
 const ChatContext = createContext(null);
@@ -32,6 +37,13 @@ export const ChatProvider = ({ children }) => {
     error: null,
     originalImage: null, // Store original image for re-upload flow
     messageType: "image", // Track if this is "image" or "whiteboard"
+  });
+
+  // Problem generation state management
+  const [problemGenerationState, setProblemGenerationState] = useState({
+    isProcessing: false,
+    error: null,
+    generatedProblems: null,
   });
 
   /**
@@ -81,8 +93,6 @@ export const ChatProvider = ({ children }) => {
           confidence: result.confidence,
           error: null,
         }));
-
-        toast.success("Text extracted successfully!");
       } catch (err) {
         console.error("OCR error:", err);
         setOCRState((prev) => ({
@@ -109,6 +119,53 @@ export const ChatProvider = ({ children }) => {
       confidence: null,
       error: null,
       originalImage: null,
+    });
+  }, []);
+
+  /**
+   * Generate practice problems from a solved problem
+   */
+  const generateProblems = useCallback(async (solvedProblem) => {
+    try {
+      setProblemGenerationState({
+        isProcessing: true,
+        error: null,
+        generatedProblems: null,
+      });
+
+      const result = await callGenerateProblemsAPI(solvedProblem, 3);
+
+      if (!result.success) {
+        throw new Error("Failed to generate problems");
+      }
+
+      setProblemGenerationState({
+        isProcessing: false,
+        error: null,
+        generatedProblems: result.problems || [],
+      });
+
+      return result.problems;
+    } catch (err) {
+      console.error("Problem generation error:", err);
+      setProblemGenerationState({
+        isProcessing: false,
+        error: err.message || "Failed to generate practice problems",
+        generatedProblems: null,
+      });
+      toast.error("Failed to generate practice problems");
+      return null;
+    }
+  }, []);
+
+  /**
+   * Clear problem generation state
+   */
+  const clearProblems = useCallback(() => {
+    setProblemGenerationState({
+      isProcessing: false,
+      error: null,
+      generatedProblems: null,
     });
   }, []);
 
@@ -177,13 +234,23 @@ export const ChatProvider = ({ children }) => {
           throw new Error(response.error || "Failed to get response");
         }
 
+        // Extract verification tag from AI response
+        const verification = extractVerificationTag(response.message);
+
         // Add AI response
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
           type: "text",
-          content: response.message,
+          content: verification.cleanText, // Use clean text without tags for display
           timestamp: response.timestamp,
+          answerVerification: verification.tagType
+            ? {
+                hasTag: verification.hasTag,
+                tagType: verification.tagType, // "CORRECT" or "NEEDS_REVIEW"
+                isAnswerCorrect: verification.tagType === "CORRECT",
+              }
+            : undefined,
         };
 
         setMessages((prev) => [...prev, aiMessageObj]);
@@ -200,7 +267,6 @@ export const ChatProvider = ({ children }) => {
 
         // Clear OCR state and show success
         clearOCRState();
-        toast.success("Problem sent to tutor!");
         setIsLoading(false);
       } catch (err) {
         console.error("Send message error:", err);
@@ -313,13 +379,23 @@ export const ChatProvider = ({ children }) => {
           throw new Error(response.error || "Failed to get response");
         }
 
+        // Extract verification tag from AI response
+        const verification = extractVerificationTag(response.message);
+
         // Add AI response to messages (backend already saved it)
         const aiMessageObj = {
           id: response.messageId,
           role: "assistant",
           type: "text",
-          content: response.message,
+          content: verification.cleanText, // Use clean text without tags for display
           timestamp: response.timestamp,
+          answerVerification: verification.tagType
+            ? {
+                hasTag: verification.hasTag,
+                tagType: verification.tagType, // "CORRECT" or "NEEDS_REVIEW"
+                isAnswerCorrect: verification.tagType === "CORRECT",
+              }
+            : undefined,
         };
 
         setMessages((prev) => [...prev, aiMessageObj]);
@@ -363,7 +439,27 @@ export const ChatProvider = ({ children }) => {
 
       // Load messages
       const loadedMessages = await loadMessages(convId);
-      setMessages(loadedMessages);
+
+      // Extract verification tags from loaded messages (they're stored with tags)
+      const messagesWithVerification = loadedMessages.map((msg) => {
+        if (msg.role === "assistant" && msg.content) {
+          const verification = extractVerificationTag(msg.content);
+          return {
+            ...msg,
+            content: verification.cleanText, // Use clean text for display
+            answerVerification: verification.tagType
+              ? {
+                  hasTag: verification.hasTag,
+                  tagType: verification.tagType,
+                  isAnswerCorrect: verification.tagType === "CORRECT",
+                }
+              : undefined,
+          };
+        }
+        return msg;
+      });
+
+      setMessages(messagesWithVerification);
 
       // Load conversation metadata
       const metadata = await loadConversationMetadata(convId);
@@ -459,6 +555,10 @@ export const ChatProvider = ({ children }) => {
     processImageWithOCR,
     clearOCRState,
     sendConfirmedOCRText,
+    // Problem generation state and handlers
+    problemGenerationState,
+    generateProblems,
+    clearProblems,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

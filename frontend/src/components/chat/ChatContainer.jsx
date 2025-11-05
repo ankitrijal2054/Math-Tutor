@@ -5,6 +5,7 @@ import TypingIndicator from "./TypingIndicator";
 import OCRConfirmation from "./OCRConfirmation";
 import OCRError from "./OCRError";
 import WhiteboardModal from "../whiteboard/WhiteboardModal";
+import GeneratedProblems from "./GeneratedProblems";
 import { useChatContext } from "../../contexts/ChatContext";
 
 const ChatContainer = ({ sidebarRef }) => {
@@ -18,6 +19,9 @@ const ChatContainer = ({ sidebarRef }) => {
     sendConfirmedOCRText,
     processImageWithOCR,
     conversationId,
+    problemGenerationState,
+    generateProblems,
+    clearProblems,
   } = useChatContext();
 
   const [showTypeManually, setShowTypeManually] = useState(false);
@@ -72,6 +76,24 @@ const ChatContainer = ({ sidebarRef }) => {
     }
   };
 
+  // Handle problem generation request
+  const handleGenerateProblems = async (solvedProblem) => {
+    await generateProblems(solvedProblem);
+  };
+
+  // Handle selecting a generated problem
+  const handleSelectProblem = (problem) => {
+    if (problem && problem.text) {
+      clearProblems();
+      sendMessage(problem.text);
+    }
+  };
+
+  // Handle dismissing generated problems
+  const handleDismissProblems = () => {
+    clearProblems();
+  };
+
   return (
     <div className="flex flex-col h-full bg-slate-800">
       {/* Error Alert */}
@@ -84,7 +106,25 @@ const ChatContainer = ({ sidebarRef }) => {
       )}
 
       {/* Messages Container */}
-      <MessageList messages={messages} />
+      <MessageList
+        messages={messages}
+        onGenerateProblems={handleGenerateProblems}
+      />
+
+      {/* Generated Problems Container */}
+      {(problemGenerationState.generatedProblems ||
+        problemGenerationState.isProcessing ||
+        problemGenerationState.error) && (
+        <div className="px-4 pb-2">
+          <GeneratedProblems
+            problems={problemGenerationState.generatedProblems}
+            onSelectProblem={handleSelectProblem}
+            isLoading={problemGenerationState.isProcessing}
+            error={problemGenerationState.error}
+            onDismiss={handleDismissProblems}
+          />
+        </div>
+      )}
 
       {/* Typing Indicator */}
       {isLoading && (
