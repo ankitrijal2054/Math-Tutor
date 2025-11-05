@@ -11,15 +11,20 @@ import { loadUserConversations } from "../../services/firestore";
 import { groupConversationsByDate } from "../../utils/helpers";
 import ConversationItem from "./ConversationItem";
 import EmptySidebarState from "./EmptySidebarState";
-import SearchConversations from "./SearchConversations";
 import toast from "react-hot-toast";
 
 /**
  * ConversationList component - fetches and displays grouped conversations
  * @param {Function} onSelectConversation - Callback when conversation is selected (for mobile drawer close)
+ * @param {string} searchQuery - Search query from parent component
+ * @param {Function} onConversationsCountChange - Callback to notify parent of conversations count
  */
 const ConversationListComponent = (
-  { onSelectConversation = () => {} },
+  {
+    onSelectConversation = () => {},
+    searchQuery = "",
+    onConversationsCountChange = () => {},
+  },
   ref
 ) => {
   const { user } = useAuth();
@@ -28,8 +33,6 @@ const ConversationListComponent = (
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [groupedConversations, setGroupedConversations] = useState({});
-  const [searchQuery, setSearchQuery] = useState("");
 
   /**
    * Fetch conversations for current user
@@ -46,9 +49,8 @@ const ConversationListComponent = (
       const convos = await loadUserConversations(user.uid);
       setConversations(convos);
 
-      // Group conversations by date
-      const grouped = groupConversationsByDate(convos);
-      setGroupedConversations(grouped);
+      // Notify parent of conversations count
+      onConversationsCountChange(convos.length);
     } catch (err) {
       console.error("Error loading conversations:", err);
       setError(err.message || "Failed to load conversations");
@@ -56,7 +58,7 @@ const ConversationListComponent = (
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, onConversationsCountChange]);
 
   // Expose fetchConversations via ref so it can be called from ChatContext
   useImperativeHandle(ref, () => ({
@@ -75,10 +77,11 @@ const ConversationListComponent = (
       prev.filter((convo) => convo.id !== deletedConvId)
     );
 
-    // Re-group conversations
+    // Get remaining conversations
     const convos = conversations.filter((c) => c.id !== deletedConvId);
-    const grouped = groupConversationsByDate(convos);
-    setGroupedConversations(grouped);
+
+    // Update parent with new count
+    onConversationsCountChange(convos.length);
 
     // If the deleted conversation was active, navigate to the next one
     if (deletedConvId === activeConvId) {
@@ -143,56 +146,42 @@ const ConversationListComponent = (
   ];
 
   return (
-    <>
-      {/* Search Component */}
-      {conversations.length > 5 && (
-        <SearchConversations
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onClear={() => setSearchQuery("")}
-        />
-      )}
+    <div className="p-2 space-y-1">
+      {filteredConversations.length === 0 ? (
+        <div className="p-6 text-center">
+          <p className="text-sm text-slate-400">No conversations found</p>
+          <p className="text-xs text-slate-500 mt-1">
+            Try adjusting your search
+          </p>
+        </div>
+      ) : (
+        groups.map(({ key }) => {
+          const groupConvos = displayGrouped[key] || [];
+          if (groupConvos.length === 0) return null;
 
-      {/* Conversations List */}
-      <div className="p-2 space-y-1">
-        {filteredConversations.length === 0 ? (
-          <div className="p-6 text-center">
-            <p className="text-sm text-slate-400">No conversations found</p>
-            <p className="text-xs text-slate-500 mt-1">
-              Try adjusting your search
-            </p>
-          </div>
-        ) : (
-          groups.map(({ key, label }) => {
-            const groupConvos = displayGrouped[key] || [];
-            if (groupConvos.length === 0) return null;
-
-            return (
-              <div key={key} className="mb-4">
-                {/* Section Header */}
-                <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {"CONVERSATIONS"}
-                </div>
-
-                {/* Conversations in this group */}
-                <div className="space-y-1">
-                  {groupConvos.map((conversation) => (
-                    <ConversationItem
-                      key={conversation.id}
-                      conversation={conversation}
-                      onDeleted={() =>
-                        handleConversationDeleted(conversation.id)
-                      }
-                      onSelect={onSelectConversation}
-                    />
-                  ))}
-                </div>
+          return (
+            <div key={key} className="mb-4">
+              {/* Section Header */}
+              <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                {"CONVERSATIONS"}
               </div>
-            );
-          })
-        )}
-      </div>
-    </>
+
+              {/* Conversations in this group */}
+              <div className="space-y-1">
+                {groupConvos.map((conversation) => (
+                  <ConversationItem
+                    key={conversation.id}
+                    conversation={conversation}
+                    onDeleted={() => handleConversationDeleted(conversation.id)}
+                    onSelect={onSelectConversation}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
   );
 };
 
