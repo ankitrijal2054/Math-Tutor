@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Zap, Mic, X, Square } from "lucide-react";
+import { Send, Zap, Mic, X, Square, Sigma } from "lucide-react";
 import ImageUpload from "./ImageUpload";
+import SymbolPad from "./SymbolPad";
 import { compressImage } from "../../utils/imageCompression";
 import { useWhiteboard } from "../../contexts/WhiteboardContext";
 import { useVoice } from "../../hooks/useVoice";
@@ -11,6 +12,7 @@ const InputArea = ({ onSend, disabled = false }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSymbolPadOpen, setIsSymbolPadOpen] = useState(false);
   const textareaRef = useRef(null);
   const dropZoneRef = useRef(null);
 
@@ -163,21 +165,48 @@ const InputArea = ({ onSend, disabled = false }) => {
     }
   };
 
+  // Handle symbol selection from symbol pad
+  const handleSymbolSelect = (symbol) => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newInput =
+        input.substring(0, start) + symbol + input.substring(end);
+      setInput(newInput);
+
+      // Set cursor after the inserted symbol
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + symbol.length, start + symbol.length);
+      }, 0);
+    } else {
+      // Fallback if textarea ref not available
+      setInput(input + symbol);
+    }
+  };
+
   // Send button disabled states
   const isSendDisabled =
     disabled || isCompressing || (!input.trim() && !selectedImage?.compressed);
 
   return (
-    <div
-      ref={dropZoneRef}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={`border-t border-slate-700 bg-slate-800 p-4 space-y-3 transition-colors duration-200 ${
-        isDragging ? "bg-slate-700/50 border-indigo-500" : ""
-      }`}
-    >
+    <>
+      <SymbolPad
+        isOpen={isSymbolPadOpen}
+        onClose={() => setIsSymbolPadOpen(false)}
+        onSymbolSelect={handleSymbolSelect}
+      />
+      <div
+        ref={dropZoneRef}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`border-t border-slate-700 bg-slate-800 p-4 space-y-3 transition-colors duration-200 ${
+          isDragging ? "bg-slate-700/50 border-indigo-500" : ""
+        }`}
+      >
       {/* Drag overlay indicator */}
       {isDragging && (
         <div className="absolute inset-0 bg-indigo-500/10 border-2 border-dashed border-indigo-500 rounded flex items-center justify-center pointer-events-none">
@@ -244,6 +273,15 @@ const InputArea = ({ onSend, disabled = false }) => {
           >
             <Zap className="w-5 h-5" />
           </button>
+          <button
+            onClick={() => setIsSymbolPadOpen(true)}
+            disabled={disabled || voice.isListening}
+            aria-label="Open symbol pad"
+            title="Insert math symbols"
+            className="h-full px-3 rounded-lg bg-slate-700 hover:bg-slate-600 hover:shadow-md active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-all duration-200 flex items-center justify-center"
+          >
+            <Sigma className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Text Input */}
@@ -297,7 +335,8 @@ const InputArea = ({ onSend, disabled = false }) => {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
