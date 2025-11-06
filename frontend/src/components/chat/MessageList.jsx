@@ -71,7 +71,11 @@ const MessageList = ({ messages = [], onGenerateProblems }) => {
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gradient-to-b from-slate-900 to-slate-800 rounded-lg"
+      role="region"
+      aria-label="Chat messages"
+      aria-live="polite"
+      aria-atomic="false"
+      className="flex-1 overflow-y-auto px-4 py-6 space-y-3 bg-gradient-to-b from-slate-900 to-slate-800"
     >
       {messages.length === 0 ? (
         <>

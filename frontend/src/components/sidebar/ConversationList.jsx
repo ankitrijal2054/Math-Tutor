@@ -160,21 +160,24 @@ const ConversationListComponent = (
           if (groupConvos.length === 0) return null;
 
           return (
-            <div key={key} className="mb-4">
+            <div key={key} className="mb-6">
               {/* Section Header */}
-              <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 {"CONVERSATIONS"}
               </div>
 
               {/* Conversations in this group */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {groupConvos.map((conversation) => (
-                  <ConversationItem
-                    key={conversation.id}
-                    conversation={conversation}
-                    onDeleted={() => handleConversationDeleted(conversation.id)}
-                    onSelect={onSelectConversation}
-                  />
+                  <div key={conversation.id} className="px-2">
+                    <ConversationItem
+                      conversation={conversation}
+                      onDeleted={() =>
+                        handleConversationDeleted(conversation.id)
+                      }
+                      onSelect={onSelectConversation}
+                    />
+                  </div>
                 ))}
               </div>
             </div>

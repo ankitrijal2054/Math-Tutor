@@ -70,7 +70,7 @@ const MessageBubble = ({
   return (
     <>
       <div
-        className={`flex gap-3 mb-4 animate-fadeIn ${
+        className={`flex gap-3 mb-4 animate-fadeIn px-2 ${
           isUser ? "justify-end" : "justify-start"
         }`}
         onMouseEnter={() => setShowTimestamp(true)}
@@ -92,10 +92,10 @@ const MessageBubble = ({
           {/* Image/Whiteboard Message */}
           {(isImage || isWhiteboard) && isUser && (
             <div
-              className={`relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 ${
+              className={`relative rounded-2xl overflow-hidden shadow-lg cursor-pointer group rounded-br-none mb-2 transition-all duration-200 hover:shadow-xl ${
                 isWhiteboard
-                  ? "bg-gradient-to-br from-blue-500 to-cyan-500 p-1"
-                  : "bg-gradient-to-r from-indigo-500 to-purple-600 p-1"
+                  ? "bg-gradient-to-br from-blue-500 to-cyan-500 p-1 hover:shadow-cyan-500/20"
+                  : "bg-gradient-to-r from-indigo-500 to-purple-600 p-1 hover:shadow-purple-500/20"
               }`}
               onClick={() => setShowImageModal(true)}
             >
@@ -114,7 +114,11 @@ const MessageBubble = ({
               ) : (
                 <img
                   src={content}
-                  alt={isWhiteboard ? "Whiteboard drawing" : "User uploaded"}
+                  alt={
+                    isWhiteboard
+                      ? "Student whiteboard drawing showing mathematical solution"
+                      : "Student uploaded math problem image"
+                  }
                   className="h-40 w-40 object-cover rounded-xl group-hover:opacity-80 transition-opacity"
                   onError={() => setImageLoadError(true)}
                 />
@@ -136,13 +140,13 @@ const MessageBubble = ({
           {!isImage && !isWhiteboard && (
             <div className="flex items-end gap-2">
               <div
-                className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 ${
+                className={`px-4 py-3 rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl ${
                   isUser
-                    ? "bg-white text-slate-900 rounded-br-none"
-                    : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none"
+                    ? "bg-white text-slate-900 rounded-br-none hover:shadow-md"
+                    : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-bl-none hover:shadow-xl hover:shadow-purple-500/20"
                 }`}
               >
-                <div className="text-sm leading-relaxed">
+                <div className="text-sm leading-relaxed select-text">
                   <MathRenderer content={content} />
                 </div>
               </div>
@@ -151,7 +155,7 @@ const MessageBubble = ({
               {isAssistant && voice.isSupported && (
                 <button
                   onClick={handleSpeak}
-                  title={
+                  aria-label={
                     voice.isGenerating
                       ? "Generating speech..."
                       : isSpeakingThisMessage
@@ -181,7 +185,7 @@ const MessageBubble = ({
                 answerVerification?.isAnswerCorrect && (
                   <button
                     onClick={() => onGenerateProblems(content)}
-                    title="Generate similar practice problems"
+                    aria-label="Generate similar practice problems"
                     className="flex-shrink-0 mb-1 p-2 rounded-lg transition-all duration-200 bg-amber-600 hover:bg-amber-700 text-white animate-pulse"
                   >
                     <Sparkles className="w-4 h-4" />
