@@ -9,6 +9,7 @@ import { ThemeProvider } from "./theme";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ChatProvider } from "./contexts/ChatContext";
 import { WhiteboardProvider } from "./contexts/WhiteboardContext";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ChatPage from "./pages/ChatPage";
@@ -22,6 +23,7 @@ function App() {
           <ChatProvider>
             <WhiteboardProvider>
               <Routes>
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route
@@ -40,7 +42,6 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="/" element={<Navigate to="/chat" replace />} />
               </Routes>
               <Toaster position="top-right" />
             </WhiteboardProvider>
