@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Check, Edit2, RotateCcw, X, AlertCircle } from "lucide-react";
+import MathRenderer from "../shared/MathRenderer";
 
 /**
  * OCRConfirmation component - Shows extracted text from image with confirmation flow
@@ -10,7 +11,6 @@ const OCRConfirmation = ({
   extractedText,
   confidence,
   onConfirm,
-  onEdit,
   onReupload,
   isLoading = false,
 }) => {
@@ -105,8 +105,12 @@ const OCRConfirmation = ({
                   placeholder="Edit the extracted text here..."
                 />
               ) : (
-                <div className="w-full h-48 p-3 bg-slate-700 text-white border border-slate-600 rounded-lg overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap break-words">
-                  {editedText || "(No text extracted)"}
+                <div className="w-full h-48 p-3 bg-slate-700 text-white border border-slate-600 rounded-lg overflow-y-auto text-sm leading-relaxed break-words">
+                  {editedText ? (
+                    <MathRenderer content={editedText} />
+                  ) : (
+                    "(No text extracted)"
+                  )}
                 </div>
               )}
             </div>

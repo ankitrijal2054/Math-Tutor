@@ -8,6 +8,14 @@ const Layout = ({ children }) => {
 
   return (
     <div className="h-screen flex flex-col bg-slate-900">
+      {/* Skip to main content link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:bg-purple-600 focus:text-white focus:p-2 focus:z-50"
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
       <Header
         onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -24,7 +32,10 @@ const Layout = ({ children }) => {
         />
 
         {/* Chat Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main
+          id="main-content"
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           {React.cloneElement(children, { sidebarRef })}
         </main>
 

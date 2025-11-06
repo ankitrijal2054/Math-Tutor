@@ -42,6 +42,7 @@ const ChatContainer = ({ sidebarRef }) => {
   const handleOCRConfirm = (confirmedText) => {
     if (ocrState.imageDataURL && confirmedText.trim()) {
       sendConfirmedOCRText(confirmedText, ocrState.imageDataURL);
+      clearOCRState(); // Close modal immediately
     }
   };
 
@@ -138,6 +139,42 @@ const ChatContainer = ({ sidebarRef }) => {
 
       {/* Whiteboard Modal */}
       <WhiteboardModal onSend={handleSend} />
+
+      {/* OCR Processing Loading Modal */}
+      {ocrState.isProcessing && !ocrState.extractedText && !ocrState.error && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-white font-semibold text-lg">
+                Extracting Text
+              </h2>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4 flex flex-col items-center">
+              {/* Image Preview */}
+              {ocrState.imageDataURL && (
+                <img
+                  src={ocrState.imageDataURL}
+                  alt="Processing"
+                  className="w-32 h-32 object-contain rounded-lg border border-slate-600 bg-slate-900"
+                />
+              )}
+
+              {/* Loading Spinner */}
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 border-4 border-slate-600 border-t-indigo-500 rounded-full animate-spin"></div>
+                <p className="text-slate-300 text-sm text-center">
+                  Please wait while we extract text from the{" "}
+                  {ocrState.messageType === "whiteboard" ? "drawing" : "image"}
+                  ...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* OCR Confirmation Modal */}
       {ocrState.extractedText && !ocrState.error && (

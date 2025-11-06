@@ -182,7 +182,7 @@ const tts = onRequest(async (req, res) => {
       }
 
       // 2. Validate input
-      const { text, voice = "nova", speed = 1.0, format = "mp3" } = req.body;
+      const { text, voice = "nova", format = "mp3" } = req.body;
 
       if (!text || typeof text !== "string") {
         res
@@ -207,11 +207,6 @@ const tts = onRequest(async (req, res) => {
             ", "
           )}`,
         });
-        return;
-      }
-
-      if (speed < 0.25 || speed > 4.0) {
-        res.status(400).json({ error: "Speed must be between 0.25 and 4.0" });
         return;
       }
 
@@ -243,7 +238,6 @@ const tts = onRequest(async (req, res) => {
         model: "tts-1",
         voice,
         input: text,
-        speed,
         response_format: format,
       });
 

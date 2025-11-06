@@ -45,15 +45,16 @@ const MathRenderer = ({ content }) => {
 
 /**
  * Parse content string into segments of text and math
- * Handles both inline ($...$) and block ($$...$$) math
+ * Handles both inline ($...$, \(...\)) and block ($$...$$, \[...\]) math
  */
 function parseContent(content) {
   const segments = [];
   let currentIndex = 0;
 
-  // Regex to find block math ($$...$$) and inline math ($...$)
-  // We need to prioritize block math ($$ patterns) over inline math
-  const regex = /(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g;
+  // Regex to find block math ($$...$$, \[...\]) and inline math ($...$, \(...\))
+  // Priority order: $$ > \[ > $ > \(
+  const regex =
+    /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$\n]+?\$|\\`[^`]*?\\`|\\\([^\)]*?\\\))/g;
 
   let match;
   while ((match = regex.exec(content)) !== null) {
@@ -68,13 +69,25 @@ function parseContent(content) {
     // Add the math segment
     const mathContent = match[0];
     if (mathContent.startsWith("$$")) {
-      // Block math: remove the $$ delimiters
+      // Block math with $$: remove the $$ delimiters
       segments.push({
         type: "block-math",
         value: mathContent.slice(2, -2).trim(),
       });
+    } else if (mathContent.startsWith("\\[")) {
+      // Block math with \[...\]: remove the \[ and \] delimiters
+      segments.push({
+        type: "block-math",
+        value: mathContent.slice(2, -2).trim(),
+      });
+    } else if (mathContent.startsWith("\\(")) {
+      // Inline math with \(...\): remove the \( and \) delimiters
+      segments.push({
+        type: "inline-math",
+        value: mathContent.slice(2, -2),
+      });
     } else {
-      // Inline math: remove the $ delimiters
+      // Inline math with $: remove the $ delimiters
       segments.push({
         type: "inline-math",
         value: mathContent.slice(1, -1),

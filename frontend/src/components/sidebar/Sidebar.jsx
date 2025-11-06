@@ -59,7 +59,8 @@ const SidebarComponent = (
   };
 
   return (
-    <aside
+    <nav
+      aria-label="Conversations"
       className={`${
         isMobileOpen ? "flex fixed inset-y-0 left-0 z-50" : "hidden md:flex"
       } w-64 bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700 overflow-hidden flex-col transition-all duration-300 ease-in-out`}
@@ -69,7 +70,7 @@ const SidebarComponent = (
         <button
           onClick={handleNewConversation}
           disabled={isCreating}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:shadow-lg hover:shadow-purple-600/40 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
         >
           <Plus size={18} />
           <span>New Chat</span>
@@ -96,7 +97,7 @@ const SidebarComponent = (
           onConversationsCountChange={setConversationsCount}
         />
       </div>
-    </aside>
+    </nav>
   );
 };
 

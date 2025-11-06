@@ -6,26 +6,21 @@ import toast from "react-hot-toast";
 const VoiceSettings = ({ isOpen, onClose }) => {
   const voice = useOpenAIVoice();
   const [tempVoice, setTempVoice] = useState(voice.voice);
-  const [tempSpeed, setTempSpeed] = useState(voice.speed);
   const [isTestingVoice, setIsTestingVoice] = useState(false);
 
   // Update temp values when voice settings change
   useEffect(() => {
     setTempVoice(voice.voice);
-    setTempSpeed(voice.speed);
-  }, [voice.voice, voice.speed]);
+  }, [voice.voice]);
 
   const handleApply = () => {
     voice.setVoice(tempVoice);
-    voice.setSpeed(tempSpeed);
     onClose();
   };
 
   const handleReset = () => {
     setTempVoice("nova");
-    setTempSpeed(1.0);
     voice.setVoice("nova");
-    voice.setSpeed(1.0);
     localStorage.removeItem("openaiVoiceSettings");
   };
 
@@ -95,31 +90,6 @@ const VoiceSettings = ({ isOpen, onClose }) => {
               <p className="text-xs text-slate-400 mt-1">
                 Choose your preferred voice for text-to-speech
               </p>
-            </div>
-
-            {/* Speech Speed */}
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Speech Speed:{" "}
-                <span className="text-indigo-400">
-                  {(tempSpeed * 100).toFixed(0)}%
-                </span>
-              </label>
-              <input
-                type="range"
-                min="0.25"
-                max="4"
-                step="0.25"
-                value={tempSpeed}
-                onChange={(e) => setTempSpeed(parseFloat(e.target.value))}
-                disabled={!voice.isSupported}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>Slow (0.25x)</span>
-                <span>Normal (1x)</span>
-                <span>Fast (4x)</span>
-              </div>
             </div>
 
             {/* Calls Remaining */}

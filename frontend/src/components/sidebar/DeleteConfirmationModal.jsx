@@ -80,14 +80,14 @@ const DeleteConfirmationModal = ({
                     <button
                       onClick={onCancel}
                       disabled={isDeleting}
-                      className="flex-1 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 hover:shadow-md active:scale-95 text-slate-100 font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={onConfirm}
                       disabled={isDeleting}
-                      className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 active:scale-95 text-white font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isDeleting && (
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

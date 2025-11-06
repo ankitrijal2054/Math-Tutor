@@ -29,7 +29,6 @@ export const useOpenAIVoice = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [voice, setVoice] = useState("nova");
-  const [speed, setSpeed] = useState(1.0);
   const [callsRemaining, setCallsRemaining] = useState(null);
   const [isSupported, setIsSupported] = useState(true);
 
@@ -51,10 +50,8 @@ export const useOpenAIVoice = () => {
       try {
         const savedSettings = localStorage.getItem("openaiVoiceSettings");
         if (savedSettings) {
-          const { voice: savedVoice, speed: savedSpeed } =
-            JSON.parse(savedSettings);
+          const { voice: savedVoice } = JSON.parse(savedSettings);
           if (savedVoice) setVoice(savedVoice);
-          if (savedSpeed) setSpeed(savedSpeed);
         }
       } catch (error) {
         console.error("Error loading voice settings:", error);
@@ -70,14 +67,11 @@ export const useOpenAIVoice = () => {
   // Persist settings to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(
-        "openaiVoiceSettings",
-        JSON.stringify({ voice, speed })
-      );
+      localStorage.setItem("openaiVoiceSettings", JSON.stringify({ voice }));
     } catch (error) {
       console.error("Error saving voice settings:", error);
     }
-  }, [voice, speed]);
+  }, [voice]);
 
   /**
    * Call the TTS Cloud Function to generate audio
@@ -119,7 +113,6 @@ export const useOpenAIVoice = () => {
           body: JSON.stringify({
             text,
             voice,
-            speed,
             format: "mp3",
           }),
         });
@@ -164,7 +157,7 @@ export const useOpenAIVoice = () => {
         setIsGenerating(false);
       }
     },
-    [voice, speed]
+    [voice]
   );
 
   /**
@@ -273,8 +266,6 @@ export const useOpenAIVoice = () => {
     // Settings
     voice,
     setVoice,
-    speed,
-    setSpeed,
     callsRemaining,
 
     // Status

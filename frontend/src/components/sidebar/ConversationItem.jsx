@@ -56,8 +56,8 @@ const ConversationItem = ({
       <div
         className={`group relative rounded-lg transition-all duration-200 flex items-center gap-2 min-w-0 ${
           isActive
-            ? "bg-indigo-600/20 border border-indigo-500/50 shadow-lg shadow-indigo-500/10"
-            : "hover:bg-slate-700/50 hover:shadow-md"
+            ? "bg-indigo-600/25 border border-indigo-500/60 shadow-lg shadow-indigo-500/15 hover:shadow-xl hover:shadow-indigo-500/20"
+            : "hover:bg-slate-700/60 hover:shadow-md hover:border hover:border-slate-600/50 hover:shadow-slate-800/30"
         }`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
@@ -88,16 +88,16 @@ const ConversationItem = ({
               setShowDeleteModal(true);
             }}
             disabled={isDeleting}
-            className="flex-shrink-0 p-1.5 mr-1 rounded hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-shrink-0 p-1.5 mr-1 rounded-lg hover:bg-red-500/20 text-slate-400 hover:text-red-400 hover:shadow-md active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Delete conversation"
           >
             <Trash2 size={16} />
           </button>
         )}
 
-        {/* Active Indicator - Left border */}
+        {/* Active Indicator - Left border with glow */}
         {isActive && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-lg"></div>
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-lg shadow-lg shadow-indigo-500/50"></div>
         )}
       </div>
 

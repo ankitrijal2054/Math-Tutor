@@ -152,23 +152,32 @@ functions/
 └── package.json
 ```
 
-### API Endpoints (Future)
+### API Endpoints (Implemented)
 
 ```
 POST /api/chat
 ├── Input: { conversationId, userId, message, authToken }
-├── Process: Fetch context → Call OpenAI → Save to Firestore
-└── Output: { message: string, messageId: string }
+├── Process: Fetch context → Verify answer → Call OpenAI → Extract tags → Save to Firestore
+├── Output: { message: string, messageId: string, answerVerification?: { isAnswerCorrect: boolean } }
+└── Status: ✅ Deployed
 
-POST /api/ocr [Phase 2]
+POST /api/ocr
 ├── Input: { imageData, authToken }
 ├── Process: Call Vision API → Extract text
-└── Output: { extractedText: string }
+├── Output: { extractedText: string }
+└── Status: ✅ Deployed
 
-POST /api/problemgen [Phase 5]
-├── Input: { problem, authToken }
+POST /api/tts
+├── Input: { text, voice, speed, authToken }
+├── Process: Call OpenAI TTS → Encode base64
+├── Output: { audioBase64: string }
+└── Status: ✅ Deployed
+
+POST /api/generateProblems
+├── Input: { problem, solutions, authToken }
 ├── Process: Call OpenAI → Generate similar problems
-└── Output: { problems: Problem[] }
+├── Output: { problems: Problem[], usage: UsageData }
+└── Status: ✅ Deployed
 ```
 
 ## Data Models
@@ -183,7 +192,7 @@ users/{uid}
 └── lastLoginAt: timestamp
 
 conversations/{conversationId}
-├── uid: string (owner)
+├── userId: string (owner)
 ├── title: string (first 50 chars)
 ├── createdAt: timestamp
 ├── updatedAt: timestamp
@@ -192,10 +201,30 @@ conversations/{conversationId}
 conversations/{conversationId}/messages/{messageId}
 ├── role: 'user' | 'assistant'
 ├── content: string
-├── type: 'text' | 'image'
+├── type: 'text' | 'image' | 'whiteboard'
 ├── imageUrl?: string
 ├── extractedText?: string
+├── caption?: string
+├── answerVerification?: { isAnswerCorrect: boolean }
 └── timestamp: timestamp
+
+ttsUsage/{userId}
+├── {YYYY-MM-DD}: {
+│   ├── count: number
+│   └── timestamp: timestamp
+│ }
+
+ocrUsage/{userId}
+├── {YYYY-MM-DD}: {
+│   ├── count: number
+│   └── timestamp: timestamp
+│ }
+
+problemGenUsage/{userId}
+├── {YYYY-MM-DD}: {
+│   ├── count: number
+│   └── timestamp: timestamp
+│ }
 ```
 
 ## Key Design Decisions
