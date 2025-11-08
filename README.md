@@ -44,6 +44,13 @@ AI Math Tutor is a web-based conversational AI tutoring platform that teaches ma
 - **Text-to-Speech (TTS)** - Listen to AI explanations
 - **Mobile-Ready** - Full microphone and speaker support
 
+### ✅ Answer Verification & Practice
+
+- **Mathematical Verification Engine** - Hybrid symbolic + numeric checks ensure correctness
+- **Socratic Tagging** - AI responses embed `[ANSWER_VERIFIED_CORRECT]` or `[ANSWER_NEEDS_REVIEW]`
+- **Smart Practice Generator** - Unlock a sparkles button to request similar problems instantly
+- **Context-Aware Messaging** - Practice prompts only appear after a confirmed correct solution
+
 ### 📚 Conversation Management
 
 - **Sidebar History** - View all past conversations organized by date
@@ -104,6 +111,7 @@ npm install
 
 # 4. Set up environment variables
 # Create frontend/.env.local
+VITE_CHAT_API_URL=your_chat_function_url
 VITE_FIREBASE_API_KEY=your_key
 VITE_FIREBASE_AUTH_DOMAIN=your_domain
 VITE_FIREBASE_PROJECT_ID=your_project_id
@@ -111,6 +119,8 @@ VITE_FIREBASE_STORAGE_BUCKET=your_bucket
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_OCR_API_URL=your_ocr_function_url
+VITE_TTS_API_URL=your_tts_function_url
+VITE_GENERATE_PROBLEMS_API_URL=your_generate_problems_function_url
 
 # Create functions/.env
 OPENAI_API_KEY=your_openai_key
@@ -223,13 +233,15 @@ Math Tutor/
 - [x] Search/filter functionality
 - [x] Delete with confirmation
 
-### Phase 5: Extended Features ✅
+### Phase 4: Extended Experience ✅
 
 - [x] Interactive Whiteboard with drawing tools
 - [x] Canvas export and Firebase upload
 - [x] Voice Interface (STT + TTS)
 - [x] Voice settings and persistence
 - [x] Mobile-optimized experience
+- [x] Problem generation with rate limits & UX improvements
+- [x] Landing page experience for unauthenticated users
 
 ---
 
@@ -304,7 +316,7 @@ AI: 🎉 Excellent work! You've solved it correctly!
 - **CDN Distribution** - Firebase Hosting serves globally
 - **Cloud Functions Scaling** - Auto-scales with demand
 
-**Bundle Size:** ~1,165 KB (gzip: ~316 KB)
+**Bundle Size:** ~1,226 KB (gzip: ~333 KB)
 
 ---
 
@@ -378,10 +390,10 @@ This is a solo developer project, but contributions and suggestions are welcome!
 - STT works best in Chrome/Edge (Firefox partial support)
 - Drawing recognition is manual (no auto-OCR of whiteboard)
 - Single user accounts (no teacher view or analytics)
+- Achievement polish phase underway (animations + accessibility tuning)
 
 ### Planned Features (Phase 6+)
 
-- [ ] Problem generation for practice
 - [ ] Learning analytics and progress tracking
 - [ ] Teacher dashboard
 - [ ] Handwriting recognition on whiteboard

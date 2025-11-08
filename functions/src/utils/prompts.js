@@ -191,6 +191,7 @@ Return EXACTLY this JSON format (no other text):
 - Keep problems appropriate for the original difficulty level
 - All problems should be solvable by someone who understands the original concept
 - Avoid exact duplicates with just number changes - be creative while maintaining concept
+- Each problem's "text" must begin directly with the problem statement (no greetings, praise, or introductory phrases)
 - Always return valid JSON`;
 
 module.exports = {
